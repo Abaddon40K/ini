@@ -10,11 +10,7 @@ namespace fs = std::filesystem;
 int main(int argc, char* argv[]){
 	fs::path path = "E:";
 	path /= "zfile_i.ini";
-	if (!fs::exists(path)){
-		std::cerr << "Error: invalid file path" << std::endl;
-		return -1;
-	}
-	std::ifstream file(path);
+	
 	std::string line;
 
 
@@ -22,18 +18,16 @@ int main(int argc, char* argv[]){
 
 	try
 	{
-		ini::ini i(file);
-		ini::section& ref = i["second section"];
-		std::cout << ref.data[1].key << std::endl;
-		std::cout << ref.data[1].value << std::endl;
+		ini::ini i = ini::parse_from_file(path);
+		ini::section& ref = i["section"];
+		std::cout << "'" << ref.data.cbegin()->first << "'" << std::endl;
+		std::cout << "'" << ref.data.cbegin()->second << "'" << std::endl;
+
+		i.dump(std::cout);
 	}
 	catch (const std::exception& e)
 	{
 		std::cout << e.what() << std::endl;
-	}
-
-	while (std::getline(file, line)) {
-			std::cout << line << std::endl;
 	}
 
 	return 0;

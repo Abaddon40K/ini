@@ -5,7 +5,7 @@
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 # Добавьте источник в исполняемый файл этого проекта.
-add_library (ini STATIC "ini.cpp" "ini.h")
+add_library (ini STATIC "ini.cpp" "ini.h" "test.cpp")
 
 add_executable (ini.exe main.cpp)
 
