@@ -130,7 +130,7 @@ namespace ini {
 							}).base();
 					}
 
-					temp.data.insert(std::string{ i, key_end }, std::string{ value_begin, value_end });
+					temp.data.insert({std::string{ i, key_end }, std::string{ value_begin, value_end }});
 					break;
 			}
 
