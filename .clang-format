@@ -1,6 +1,6 @@
  
 BasedOnStyle: Google
-ColumnLimit: '120'
+ColumnLimit: '110'
 IndentWidth: '4'
 TabWidth: '4'
 AccessModifierOffset: '-4'
