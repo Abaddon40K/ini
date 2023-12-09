@@ -22,23 +22,20 @@ namespace ini {
 
 		std::string& operator [](const std::string& key){
 			using namespace std::string_literals;
-
-			if (true)
-			{
-
+            auto it = data.find(key);
+			if (it != data.end()){
+                return it->second;
 			}
 			else {
-				throw std::out_of_range{ "Requested section '"s + name + "' not found"s };
+                throw std::out_of_range{"Requested key '"s + key + "' not found in section '"s + name + "'"s};
 			}
-
-
 		}
 		std::unordered_map<std::string, std::string> data;
 	};
 
 	struct ini {
 
-		ini(fs::path);
+		ini(const fs::path&);
 
 		ini(){}
 
@@ -51,8 +48,8 @@ namespace ini {
 		std::ostream& dump(std::ostream&);
 
 	};
-
-	ini parse_from_file(fs::path);
+    ini parse(std::string_view);
+	ini parse_from_file(const fs::path&);
 }
 
 

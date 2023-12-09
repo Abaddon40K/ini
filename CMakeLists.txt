@@ -10,6 +10,6 @@ if (POLICY CMP0141)
 endif()
 
 project ("ini")
-
+option(BUILD_TESTS "" ON)
 # Включите подпроекты.
 add_subdirectory ("ini")

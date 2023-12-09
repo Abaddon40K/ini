@@ -13,16 +13,12 @@ int main(int argc, char* argv[]){
 	
 	std::string line;
 
-
-	
-
-	try
-	{
-		ini::ini i = ini::parse_from_file(path);
-		ini::section& ref = i["section"];
-		std::cout << "'" << ref.data.cbegin()->first << "'" << std::endl;
-		std::cout << "'" << ref.data.cbegin()->second << "'" << std::endl;
-
+	try {
+        ini::ini i = ini::parse_from_file(path);
+        /* ini::section& ref = i["section"];
+        std::cout << "'" << ref.data.cbegin()->first << "'" << std::endl;
+        std::cout << "'" << ref.data.cbegin()->second << "'" << std::endl;
+        std::cout << ref["domainn"] << std::endl;*/
 		i.dump(std::cout);
 	}
 	catch (const std::exception& e)
