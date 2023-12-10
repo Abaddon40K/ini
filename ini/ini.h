@@ -41,7 +41,7 @@ namespace ini {
 
 		ini(ini&&) noexcept;
 
-		std::vector<section> data{};
+		std::vector<section> data {};
 
 		section& operator [](std::string);
 
