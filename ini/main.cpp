@@ -1,34 +1,30 @@
+#include <filesystem>
+#include <fstream>
+#include <ini.h>
 #include <iostream>
 #include <string>
-#include <fstream>
-#include <filesystem>
-
-#include <ini.h>
 
 namespace fs = std::filesystem;
 
-int main(int argc, char* argv[]){
-	fs::path path = "E:";
-	path /= "zfile_i.ini";
-	
-	std::string line;
+int main(int argc, char* argv[]) {
+  fs::path path  = "E:";
+  path          /= "zfile_i.ini";
 
-	try {
-        ini::ini iii;
-        ini::ini i = ini::parse_from_file(path);
-        /* ini::section& ref = i["section"];
-        std::cout << "'" << ref.data.cbegin()->first << "'" << std::endl;
-        std::cout << "'" << ref.data.cbegin()->second << "'" << std::endl;
-        std::cout << ref["domainn"] << std::endl;*/
-        i.dump(std::cout);
-        std::cout << i["section"]["domain"] << std::endl;
-        i["section"]["domain"] = "xxx";
-        std::cout << i["section"]["domain"] << std::endl;
-	}
-	catch (const std::exception& e)
-	{
-		std::cout << e.what() << std::endl;
-	}
+  std::string line;
 
-	return 0;
+  try {
+    ini::ini iii;
+    ini::ini i = ini::parse_from_file(path);
+    // i.dump(std::cout);
+    // std::cout << i["section"]["domain"] << std::endl;
+    // i["section"]["domain"] = "xxx";
+    // std::cout << i["section"]["domain"] << std::endl;
+    // i.dump(std::cout);
+
+    i.insert("MY NAME", std::pair { "Key", " Value" }, std::pair { "Second Key", "Second Value" });
+
+    i.dump(std::cout);
+  } catch(const std::exception& e) { std::cout << e.what() << std::endl; }
+
+  return 0;
 }

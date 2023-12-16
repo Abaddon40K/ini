@@ -1,8 +1,8 @@
 #pragma once
 
 namespace ini::mmap {
-    void mmap();
+  void mmap();
 
-    void unmap();
-    
-}
+  void unmap();
+
+}  // namespace ini::mmap
