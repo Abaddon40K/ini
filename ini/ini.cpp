@@ -1,4 +1,4 @@
-﻿#include "ini.h"
+#include "ini.h"
 
 #include <iostream>
 #include <string>
@@ -70,12 +70,15 @@ namespace ini {
             throw std::invalid_argument { "Invalid section name: Closing bracket not found. Error in line "
                                           + std::to_string(line_counter) + ", position "
                                           + std::to_string(current_position) };
+
           if(line.find(section_end, pos + breacket_len) != std::string::npos
-             || line.find(section_begin, current_position + breacket_len) != std::string::npos)
+             || line.find(section_begin, current_position + breacket_len) != std::string::npos) {
             throw std::invalid_argument {
               "Invalid section name: More than one opening or closing parenthesis on a line. Error in line "
               + std::to_string(line_counter) + ". Line: " + line
             };
+          }
+
           temp.name = std::string {
             line.substr(current_position + breacket_len, pos - current_position - breacket_len)
           };  // Saving the section name without brackets

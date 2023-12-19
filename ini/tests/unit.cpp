@@ -1,5 +1,10 @@
+/*
+ * TODO: fix build on windows
+ */
+
 #include <filesystem>
 #include <functional>
+#include <gtest/gtest.h>
 #include <ini.h>
 #include <iostream>
 #include <string>
@@ -20,40 +25,16 @@ const std::string& get_raw_ini() {
   return data;
 }
 
-bool ini_parse_from_string() {
-  bool all_is_OK  = false;
-  auto ini        = ini::parse(get_raw_ini());
-  all_is_OK      += (ini["section"]["domain"] != "example.com");
-  all_is_OK      += (ini["section.subsection"]["foo"] != "bar");
-  all_is_OK      += (ini["second section"]["first"] != "second");
-  all_is_OK      += (ini["second section"]["foo"] != "bar");
-  return all_is_OK == false;
+TEST(ini, parse_from_string) {
+  auto ini = ini::parse(get_raw_ini());
+
+  EXPECT_STREQ(ini["section"]["domain"].c_str(), "example.com");
+  EXPECT_STREQ(ini["section.subsection"]["foo"].c_str(), "bar");
+  EXPECT_STREQ(ini["second section"]["first"].c_str(), "second");
+  EXPECT_STREQ(ini["second section"]["foo"].c_str(), "bar");
 }
 
-bool ini_parse_from_files() {
-  bool all_is_OK = false;
-  std::cout << TEST_DATA_DIR << std::endl;
-  for(auto& i: fs::directory_iterator { fs::path { TEST_DATA_DIR } }) {
-    std::wcout << i.path().c_str() << std::endl;
-    // all_is_OK += (ini.data.size() != 0);
-  }
-
-  return all_is_OK == false;
-}
-
-std::vector<std::function<bool()>> tests {
-  ini_parse_from_string,
-  ini_parse_from_files,
-};
-
-int main(int argc, char* argv[]) {
-  std::size_t counter = 0;
-  for(auto& i: tests) {
-    ++counter;
-    if(i()) std::cout << "Test #" << counter << " is completed" << std::endl;
-    else std::cout << "Test #" << counter << " is failed" << std::endl;
-  }
-
-
-  return 0;
+TEST(ini, parse_from_files) {
+  for(auto& i: fs::directory_iterator { fs::path { TEST_DATA_DIR } })
+    ASSERT_GT(ini::parse_from_file(i).data.size(), 0);
 }
