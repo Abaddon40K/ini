@@ -1,23 +1,20 @@
 #include "ini.h"
+#include "ini.h"
 
 #include <iostream>
 #include <string>
 
 namespace ini {
-  ini::ini(ini&& rhs) noexcept : data { rhs.data } {}
-
-  ini::ini(const fs::path& path) : data { ini(parse_from_file(path)).data } {}
-
   std::ostream& ini::dump(std::ostream& os) {
     for(const auto& i: data) {
       os << section_begin << i.name << section_end << '\n';
-      for(const auto& [key, value]: i.data)
+      for(const auto& [key, value]: i)
         os << key << separator << value << '\n';
     }
     return os;
   }
 
-  section& ini::operator[](std::string name) {
+  ini::value_type& ini::operator[](std::string name) {
     using namespace std::string_literals;
 
     auto result = std::find_if(data.begin(), data.end(), [&name](const section& lhs) {
@@ -27,12 +24,26 @@ namespace ini {
     else throw std::out_of_range { "Requested section '"s + name + "' not found"s };
   }
 
+  ini& ini::operator=(const ini& lhs) {
+    if(this != &lhs) {
+      ini::data_type new_data;
+      std::copy(lhs.begin(), lhs.end(), new_data);
+      data = new_data;
+    }
+    return *this;
+  }
+
+  ini& ini::operator=(ini&& rhs) {
+    if(this != &rhs) data = rhs.data;
+    return *this;
+  }
+
   ini parse(std::string_view str) {
-    std::string line;
-    std::size_t line_counter = 0;
-    section     temp;
-    bool        first_section_found = false;
-    ini         result;
+    std::string  line;
+    std::size_t  line_counter = 0;
+    ini::section temp;
+    bool         first_section_found = false;
+    ini          result;
 
     // String data validation
     auto        new_line  = '\n';
@@ -62,8 +73,10 @@ namespace ini {
                                         + std::to_string(line_counter) + ", position "
                                         + std::to_string(current_position) };
         if(*i == section_begin) {
-          if(first_section_found) result.data.push_back(std::move(temp));
-
+          if(first_section_found) {
+            result.push_back(std::move(temp));
+            temp.erase(temp.begin(), temp.end());
+          }
           first_section_found = true;
           auto pos            = line.find(section_end, current_position);
           if(pos == std::string::npos)
@@ -136,18 +149,18 @@ namespace ini {
 
         std::string key { i, key_end };
 
-        if(temp.data.find(key) != temp.data.end())
+        if(temp.find(key) != temp.end())
           throw std::invalid_argument { "In section " + temp.name + " already exist key '" + key
                                         + "'. Repetitive key in line " + std::to_string(line_counter) };
 
-        temp.data.insert({
+        temp.insert({
             std::move(key), std::string {value_begin, value_end}
         });
         break;
       }
     }
 
-    if(first_section_found) result.data.push_back(std::move(temp));
+    if(first_section_found) result.push_back(std::move(temp));
 
 
     return result;
@@ -160,11 +173,12 @@ namespace ini {
     return parse(data);
   }
 
-  std::string& section::operator[](const std::string& key) {
+  std::string& ini::section::operator[](const std::string& key) {
     using namespace std::string_literals;
     auto it = data.find(key);
     if(it != data.end()) return it->second;
     else throw std::out_of_range { "Requested key '"s + key + "' not found in section '"s + name + "'"s };
   }
+
 
 }  // namespace ini
