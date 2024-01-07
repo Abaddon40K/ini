@@ -14,7 +14,7 @@ int main(int argc, char* argv[]) {
 
   try {
     ini::ini iii;
-    ini::ini i = ini::ini::parse_from_file(path);
+    ini::ini i = ini::parse_from_file(path);
     // i.dump(std::cout);
     // std::cout << i["section"]["domain"] << std::endl;
     // i["section"]["domain"] = "xxx";

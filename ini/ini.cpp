@@ -1,10 +1,10 @@
 #include "ini.h"
-#include "ini.h"
 
 #include <iostream>
 #include <string>
 
 namespace ini {
+
   std::ostream& ini::dump(std::ostream& os) {
     for(const auto& i: data) {
       os << section_begin << i.name << section_end << '\n';
@@ -14,27 +14,26 @@ namespace ini {
     return os;
   }
 
-  ini::value_type& ini::operator[](std::string name) {
+  ini::section& ini::operator[](std::string name) {
     using namespace std::string_literals;
 
     auto result = std::find_if(data.begin(), data.end(), [&name](const section& lhs) {
       return (lhs.name == name);
     });
+
     if(data.end() != result) return *result;
     else throw std::out_of_range { "Requested section '"s + name + "' not found"s };
   }
 
-  ini& ini::operator=(const ini& lhs) {
-    if(this != &lhs) {
-      ini::data_type new_data;
-      std::copy(lhs.begin(), lhs.end(), new_data);
-      data = new_data;
-    }
+  ini& ini::operator=(const ini& rhs) {
+    if(this != &rhs) data = rhs.data;
+
     return *this;
   }
 
   ini& ini::operator=(ini&& rhs) {
     if(this != &rhs) data = rhs.data;
+
     return *this;
   }
 
@@ -74,7 +73,7 @@ namespace ini {
                                         + std::to_string(current_position) };
         if(*i == section_begin) {
           if(first_section_found) {
-            result.push_back(std::move(temp));
+            result.insert(std::move(temp));
             temp.erase(temp.begin(), temp.end());
           }
           first_section_found = true;
@@ -160,7 +159,7 @@ namespace ini {
       }
     }
 
-    if(first_section_found) result.push_back(std::move(temp));
+    if(first_section_found) result.insert(std::move(temp));
 
 
     return result;
@@ -173,6 +172,8 @@ namespace ini {
     return parse(data);
   }
 
+  ini::ini(const fs::path& path) { data = std::move(parse_from_file(path).data); }
+
   std::string& ini::section::operator[](const std::string& key) {
     using namespace std::string_literals;
     auto it = data.find(key);
@@ -180,5 +181,8 @@ namespace ini {
     else throw std::out_of_range { "Requested key '"s + key + "' not found in section '"s + name + "'"s };
   }
 
+  //  section& section::operator=(const ini& rhs) {}
+
+  //  section& section::operator=(ini&& rhs) {}
 
 }  // namespace ini
