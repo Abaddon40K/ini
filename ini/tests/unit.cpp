@@ -5,7 +5,7 @@
 #include <filesystem>
 #include <functional>
 #include <gtest/gtest.h>
-#include <ini.h>
+#include <ini/ini.h>
 #include <iostream>
 #include <string>
 #include <vector>

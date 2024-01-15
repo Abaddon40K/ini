@@ -1,12 +1,17 @@
 #include <filesystem>
 #include <fstream>
-#include <ini.h>
+#include <ini/ini.h>
 #include <iostream>
 #include <string>
 
 namespace fs = std::filesystem;
 
 int main(int argc, char* argv[]) {
+  std::cout << "Hello leak!\n";
+  int* p = new int;
+
+  return 0;
+
   fs::path path  = "E:";
   path          /= "zfile_i.ini";
 
