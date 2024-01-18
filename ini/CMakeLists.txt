@@ -19,30 +19,21 @@ add_library(ini::shared ALIAS ini_shared)
 add_library(ini_static STATIC $<TARGET_OBJECTS:ini_object>)
 add_library(ini::static ALIAS ini_static)
 
-target_include_directories(ini_object PUBLIC $<BUILD_INTERFACE:${INI_ROOT_DIR}>)
-target_compile_features(ini_object PUBLIC cxx_std_17)
+foreach(i ini_object ini_static ini_shared)
+    set_target_properties(${i} PROPERTIES
+        VERSION ${PROJECT_VERSION}
+        SOVERSION ${PROJECT_VERSION}
+        OUTPUT_NAME ini
+        POSITION_INDEPENDENT_CODE ON
+    )
+    target_include_directories(${i} PUBLIC $<BUILD_INTERFACE:${INI_ROOT_DIR}>)
+    target_compile_features(${i} PUBLIC cxx_std_17)
+endforeach()
 
-set_target_properties(ini_shared PROPERTIES
-    VERSION ${PROJECT_VERSION}
-    SOVERSION ${PROJECT_VERSION}
-    OUTPUT_NAME ini_shared
-    SUFFIX ".dll"
-    POSITION_INDEPENDENT_CODE ON
-)
-target_include_directories(ini_shared PUBLIC $<BUILD_INTERFACE:${INI_ROOT_DIR}>)
-target_compile_features(ini_static PUBLIC cxx_std_17)
-
-set_target_properties(ini_static PROPERTIES
-    VERSION ${PROJECT_VERSION}
-    SOVERSION ${PROJECT_VERSION}
-    OUTPUT_NAME ini_static
-    SUFFIX ".lib"
-    POSITION_INDEPENDENT_CODE ON
-)
-target_include_directories(ini_static PUBLIC $<BUILD_INTERFACE:${INI_ROOT_DIR}>)
-target_compile_features(ini_static PUBLIC cxx_std_17)
-
-
+if (WIN32)
+    set_target_properties(ini_shared PROPERTIES SUFFIX ".dll")
+    set_target_properties(ini_static PROPERTIES SUFFIX ".lib")
+endif()
 
 
 add_executable(ini.exe main.cpp)
