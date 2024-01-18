@@ -23,7 +23,6 @@ foreach(i ini_object ini_static ini_shared)
     set_target_properties(${i} PROPERTIES
         VERSION ${PROJECT_VERSION}
         SOVERSION ${PROJECT_VERSION}
-        OUTPUT_NAME ini
         POSITION_INDEPENDENT_CODE ON
     )
     target_include_directories(${i} PUBLIC $<BUILD_INTERFACE:${INI_ROOT_DIR}>)
@@ -31,8 +30,7 @@ foreach(i ini_object ini_static ini_shared)
 endforeach()
 
 if (WIN32)
-    set_target_properties(ini_shared PROPERTIES SUFFIX ".dll")
-    set_target_properties(ini_static PROPERTIES SUFFIX ".lib")
+    set_target_properties(ini_static PROPERTIES OUTPUT_NAME ini)
 endif()
 
 
