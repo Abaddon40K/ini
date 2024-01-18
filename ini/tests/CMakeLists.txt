@@ -1,5 +1,5 @@
 set(tests
-        unit.cpp
+    unit.cpp
 )
 set(TEST_LINK_LIBRARIES
     ini::static
