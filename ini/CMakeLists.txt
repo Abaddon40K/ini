@@ -19,22 +19,30 @@ add_library(ini::shared ALIAS ini_shared)
 add_library(ini_static STATIC $<TARGET_OBJECTS:ini_object>)
 add_library(ini::static ALIAS ini_static)
 
+add_executable(ini.exe main.cpp)
+
 foreach(i ini_object ini_static ini_shared)
     set_target_properties(${i} PROPERTIES
         VERSION ${PROJECT_VERSION}
         SOVERSION ${PROJECT_VERSION}
         POSITION_INDEPENDENT_CODE ON
     )
+    if(UNIX)
+        set_target_properties(${i} PROPERTIES OUTPUT_NAME ini)
+    endif()
     target_include_directories(${i} PUBLIC $<BUILD_INTERFACE:${INI_ROOT_DIR}>)
     target_compile_features(${i} PUBLIC cxx_std_17)
 endforeach()
 
-if (WIN32)
+if(WIN32)
     set_target_properties(ini_static PROPERTIES OUTPUT_NAME ini)
 endif()
 
+if(UNIX)
+    set_target_properties(ini.exe PROPERTIES OUTPUT_NAME ini)
+endif()
 
-add_executable(ini.exe main.cpp)
+
 target_compile_features(ini.exe PUBLIC cxx_std_17)
 target_link_libraries(ini.exe PRIVATE ini::static)
 target_include_directories(ini.exe PUBLIC ${INI_ROOT_DIR})
