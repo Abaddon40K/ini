@@ -3,6 +3,7 @@ set(tests
 )
 set(TEST_LINK_LIBRARIES
     ini::static
+    ${MY_LINK_FLAGS}
 )
 
 if(WIN32)
@@ -25,6 +26,7 @@ foreach(i ${tests})
         add_executable(${i} ${i})
         target_compile_features(${i} PUBLIC cxx_std_17)
         target_compile_definitions(${i} PUBLIC TEST_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data")
+        target_compile_options(${i} PUBLIC ${MY_COMPILE_FLAGS})
         target_include_directories(${i} PUBLIC ${INI_ROOT_DIR} ${GTest_INCLUDE_DIRS})
         target_link_libraries(${i} PRIVATE ${TEST_LINK_LIBRARIES})
         add_test(NAME ${i}.test COMMAND ${i})

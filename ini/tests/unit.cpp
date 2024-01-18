@@ -2,7 +2,7 @@
  * TODO: fix build on windows
  */
 
-#include <filesystem> 
+#include <filesystem>
 #include <functional>
 #include <gtest/gtest.h>
 #include <ini/ini.h>
@@ -32,7 +32,6 @@ const std::string& get_raw_ini() {
 
 TEST(ini, parse_from_string) {
   ini::ini ini = ini::parse(get_raw_ini());
-
 
   EXPECT_STREQ(ini["section"]["domain"].c_str(), "example.com");
   EXPECT_STREQ(ini["section.subsection"]["foo"].c_str(), "bar");

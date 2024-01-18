@@ -8,10 +8,46 @@ set(INI_SRC
     mmap.cpp
 )
 
+set(MY_COMPILE_FLAGS )
+set(MY_LINK_FLAGS )
+
 list(APPEND INI_SRC ${INI_HDR})
+
 
 add_library(ini_object OBJECT)
 target_sources(ini_object PRIVATE ${INI_SRC})
+
+if(BUILD_RELEASE)
+    if(WIN32)
+        list(APPEND MY_COMPILE_FLAGS "/O2")
+    elseif(UNIX)
+        list(APPEND MY_COMPILE_FLAGS -O3)
+    endif()
+else() # DEBUG BUILD
+    if(WIN32)
+        list(APPEND MY_COMPILE_FLAGS "/Zi /MDd")
+    elseif(UNIX)
+        list(APPEND MY_COMPILE_FLAGS
+            -fPIC
+            -Og
+            -g3
+        )
+    endif()
+endif()
+
+if(BUILD_WITH_ASAN AND UNIX)
+    set(ASAN_FLAGS
+        -fsanitize=address,undefined,leak,signed-integer-overflow,pointer-subtract,pointer-compare
+        -fsanitize-address-use-after-scope
+    )
+    list(APPEND MY_COMPILE_FLAGS
+        -fPIC
+        -fno-omit-frame-pointer
+        -fno-optimize-sibling-calls
+        ${ASAN_FLAGS}
+    )
+    list(APPEND MY_LINK_FLAGS ${ASAN_FLAGS})
+endif()
 
 add_library(ini_shared SHARED $<TARGET_OBJECTS:ini_object>)
 add_library(ini::shared ALIAS ini_shared)
@@ -31,7 +67,9 @@ foreach(i ini_object ini_static ini_shared)
         set_target_properties(${i} PROPERTIES OUTPUT_NAME ini)
     endif()
     target_include_directories(${i} PUBLIC $<BUILD_INTERFACE:${INI_ROOT_DIR}>)
-    target_compile_features(${i} PUBLIC cxx_std_17)
+    target_compile_features(${i} PUBLIC cxx_std_20)
+    target_compile_options(${i} PUBLIC ${MY_COMPILE_FLAGS})
+    target_link_options(${i} PUBLIC ${MY_LINK_FLAGS})
 endforeach()
 
 if(WIN32)
@@ -43,9 +81,13 @@ if(UNIX)
 endif()
 
 
-target_compile_features(ini.exe PUBLIC cxx_std_17)
-target_link_libraries(ini.exe PRIVATE ini::static)
+target_compile_features(ini.exe PUBLIC cxx_std_20)
+target_link_libraries(ini.exe PRIVATE ini::static ${MY_LINK_FLAGS})
+target_compile_options(ini.exe PUBLIC ${MY_COMPILE_FLAGS})
 target_include_directories(ini.exe PUBLIC ${INI_ROOT_DIR})
+
+message(STATUS "MY_LINK_FLAGS: ${MY_LINK_FLAGS}")
+message(STATUS "MY_COMPILE_FLAGS: ${MY_COMPILE_FLAGS}")
 
 include(GNUInstallDirs)
 

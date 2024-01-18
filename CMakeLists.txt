@@ -14,7 +14,10 @@ project(ini
     DESCRIPTION "Ini parser and serializer"
     LANGUAGES CXX
 )
-option(BUILD_TESTS "" ON)
+option(BUILD_TESTS "Build and run tests" ON)
+option(BUILD_RELEASE "Build release with optiomizations" OFF)
+option(BUILD_WITH_ASAN "Build with Address Sanitizers" ON)
+
 set(INI_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_subdirectory(ini)
