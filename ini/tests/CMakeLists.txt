@@ -2,12 +2,13 @@ set(tests
         unit.cpp
 )
 set(TEST_LINK_LIBRARIES
-    ini::shared
+    ini::static
 )
 
 if(WIN32)
+    MESSAGE(STATUS "${INI_ROOT_DIR}")
     include(${INI_ROOT_DIR}/cmake/conan.cmake)
-    CONAN_CMAKE_RUN(CONANFILE conanfile.txt
+    CONAN_CMAKE_RUN(CONANFILE ${INI_ROOT_DIR}/cmake/conanfile.txt
         BASIC_SETUP CMAKE_TARGETS
         BUILD missing
     )

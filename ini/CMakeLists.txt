@@ -10,33 +10,48 @@ set(INI_SRC
 
 list(APPEND INI_SRC ${INI_HDR})
 
-add_library(ini OBJECT)
-target_sources(ini PRIVATE ${INI_SRC})
+add_library(ini_object OBJECT)
+target_sources(ini_object PRIVATE ${INI_SRC})
 
-add_library(ini_shared SHARED $<TARGET_OBJECTS:ini>)
+add_library(ini_shared SHARED $<TARGET_OBJECTS:ini_object>)
 add_library(ini::shared ALIAS ini_shared)
 
-add_library(ini_static STATIC $<TARGET_OBJECTS:ini>)
+add_library(ini_static STATIC $<TARGET_OBJECTS:ini_object>)
 add_library(ini::static ALIAS ini_static)
 
-foreach(i ini ini_static ini_shared)
-    set_target_properties(${i} PROPERTIES
-        VERSION ${PROJECT_VERSION}
-        SOVERSION ${PROJECT_VERSION}
-        OUTPUT_NAME ini
-        POSITION_INDEPENDENT_CODE ON
-    )
-    target_include_directories(ini PUBLIC ${INI_ROOT_DIR})
-    target_compile_features(${i} PUBLIC cxx_std_17)
-endforeach()
+target_include_directories(ini_object PUBLIC $<BUILD_INTERFACE:${INI_ROOT_DIR}>)
+target_compile_features(ini_object PUBLIC cxx_std_17)
+
+set_target_properties(ini_shared PROPERTIES
+    VERSION ${PROJECT_VERSION}
+    SOVERSION ${PROJECT_VERSION}
+    OUTPUT_NAME ini_shared
+    SUFFIX ".dll"
+    POSITION_INDEPENDENT_CODE ON
+)
+target_include_directories(ini_shared PUBLIC $<BUILD_INTERFACE:${INI_ROOT_DIR}>)
+target_compile_features(ini_static PUBLIC cxx_std_17)
+
+set_target_properties(ini_static PROPERTIES
+    VERSION ${PROJECT_VERSION}
+    SOVERSION ${PROJECT_VERSION}
+    OUTPUT_NAME ini_static
+    SUFFIX ".lib"
+    POSITION_INDEPENDENT_CODE ON
+)
+target_include_directories(ini_static PUBLIC $<BUILD_INTERFACE:${INI_ROOT_DIR}>)
+target_compile_features(ini_static PUBLIC cxx_std_17)
+
+
 
 
 add_executable(ini.exe main.cpp)
 target_compile_features(ini.exe PUBLIC cxx_std_17)
-target_link_libraries(ini.exe PRIVATE ini::shared)
+target_link_libraries(ini.exe PRIVATE ini::static)
 target_include_directories(ini.exe PUBLIC ${INI_ROOT_DIR})
 
 include(GNUInstallDirs)
+
 
 # install lib
 install(
