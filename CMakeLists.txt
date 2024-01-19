@@ -15,7 +15,7 @@ project(ini
     LANGUAGES CXX
 )
 option(BUILD_TESTS "Build and run tests" ON)
-option(BUILD_RELEASE "Build release with optiomizations" OFF)
+option(BUILD_RELEASE "Build release with optiomizations" ON)
 option(BUILD_WITH_ASAN "Build with Address Sanitizers" ON)
 
 set(INI_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR})

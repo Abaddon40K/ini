@@ -5,7 +5,7 @@ set(INI_HDR
 set(INI_SRC
     ini.cpp
     mmap.h
-    mmap.cpp
+    mmap.cpp 
 )
 
 set(MY_COMPILE_FLAGS )
@@ -19,13 +19,13 @@ target_sources(ini_object PRIVATE ${INI_SRC})
 
 if(BUILD_RELEASE)
     if(WIN32)
-        list(APPEND MY_COMPILE_FLAGS "/O2")
+        #list(APPEND MY_COMPILE_FLAGS "/O2") 
     elseif(UNIX)
         list(APPEND MY_COMPILE_FLAGS -O3)
     endif()
 else() # DEBUG BUILD
     if(WIN32)
-        list(APPEND MY_COMPILE_FLAGS "/Zi /MDd")
+        #list(APPEND MY_COMPILE_FLAGS "/Zi /MDd")
     elseif(UNIX)
         list(APPEND MY_COMPILE_FLAGS
             -fPIC
@@ -67,7 +67,7 @@ foreach(i ini_object ini_static ini_shared)
         set_target_properties(${i} PROPERTIES OUTPUT_NAME ini)
     endif()
     target_include_directories(${i} PUBLIC $<BUILD_INTERFACE:${INI_ROOT_DIR}>)
-    target_compile_features(${i} PUBLIC cxx_std_20)
+    target_compile_features(${i} PUBLIC cxx_std_17)
     target_compile_options(${i} PUBLIC ${MY_COMPILE_FLAGS})
     target_link_options(${i} PUBLIC ${MY_LINK_FLAGS})
 endforeach()
@@ -81,7 +81,7 @@ if(UNIX)
 endif()
 
 
-target_compile_features(ini.exe PUBLIC cxx_std_20)
+target_compile_features(ini.exe PUBLIC cxx_std_17)
 target_link_libraries(ini.exe PRIVATE ini::static ${MY_LINK_FLAGS})
 target_compile_options(ini.exe PUBLIC ${MY_COMPILE_FLAGS})
 target_include_directories(ini.exe PUBLIC ${INI_ROOT_DIR})

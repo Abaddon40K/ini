@@ -39,6 +39,11 @@ TEST(ini, parse_from_string) {
   EXPECT_STREQ(ini["second section"]["foo"].c_str(), "bar");
 }
 
+TEST(ini, parse_from_files) {
+  for(auto& i: fs::directory_iterator { fs::path { TEST_DATA_DIR } })
+    ASSERT_GT(ini::parse_from_file(i).size(), 0);
+}
+
 TEST(ini, range_based_for) {
   ini::ini ini = ini::parse(get_raw_ini());
   using vt     = ini::ini::section::value_type;
@@ -52,10 +57,7 @@ TEST(ini, range_based_for) {
   }
 }
 
-TEST(ini, parse_from_files) {
-  for(auto& i: fs::directory_iterator { fs::path { TEST_DATA_DIR } })
-    ASSERT_GT(ini::parse_from_file(i).size(), 0);
-}
+
 
 TEST(ini, insert) {
   ini::ini i;
