@@ -38,8 +38,12 @@ namespace ini {
       section() {}
       explicit section(std::string_view string_name) : name{ string_name } {}
       explicit section(std::string&& string_name) noexcept : name{ string_name } {}
-      section(const section& rhs);
-      section(section&& rhs) noexcept;
+      template<typename... Args>
+      section(std::string_view string_name, Args&&... args) : name{ string_name } {
+        data.emplace(std::forward<Args>(args)...);
+      }
+      section(const section& rhs) : name{ rhs.name }, data{ rhs.data } {}
+      section(section&& rhs) noexcept : name{ rhs.name }, data{ rhs.data } {}
       ~section() {}
 
       iterator       begin() noexcept { return data.begin(); }
@@ -57,9 +61,9 @@ namespace ini {
 
       std::size_t erase(const std::string& key) { return data.erase(key); }
       iterator    erase(iterator it) { return data.erase(it); }
-      iterator    erase(iterator begin, iterator end) { return data.erase(begin, end); }
+      iterator    erase(iterator first, iterator last) { return data.erase(first, last); }
       iterator    erase(const_iterator it) { return data.erase(it); }
-      iterator    erase(const_iterator first_it, const_iterator second_it) { return data.erase(first_it, second_it); }
+      iterator    erase(const_iterator first, const_iterator last) { return data.erase(first, last); }
 
       // написать тесты
       std::pair<std::string&, std::string&> extract(const_iterator position) {
@@ -108,7 +112,7 @@ namespace ini {
       std::string& operator[](const std::string&);
 
       section& operator=(const section&);
-      // section&     operator=(section&&);
+      section&     operator=(section&&);
 
       bool operator==(const section&);
       bool operator==(section&&);
@@ -132,7 +136,7 @@ namespace ini {
    public:
     ini() {}
     ini(const fs::path&);
-    ini(const ini& rhs) : data{ std::move(rhs.data) } {}
+    ini(const ini& rhs) : data{ rhs.data } {}
     ini(ini&& rhs) noexcept : data{ std::move(rhs.data) } {}
     ~ini() {}
 
@@ -189,14 +193,15 @@ namespace ini {
     }
   }  // namespace detail
 
+  
+
+  ini parse(std::string_view);
+  ini parse_from_file(const fs::path&);
+
   template<typename... Args>
   inline void ini::insert(std::string section_name, Args... args) {
     section temp{ section_name };
     detail::insert_helper(temp, args...);
     data.push_back(std::move(temp));
   }
-
-  ini parse(std::string_view);
-  ini parse_from_file(const fs::path&);
-
 }  // namespace ini
