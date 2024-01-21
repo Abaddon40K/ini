@@ -61,9 +61,7 @@ namespace ini {
 
       std::size_t erase(const std::string& key) { return data.erase(key); }
       iterator    erase(iterator it) { return data.erase(it); }
-      iterator    erase(iterator first, iterator last) { return data.erase(first, last); }
       iterator    erase(const_iterator it) { return data.erase(it); }
-      iterator    erase(const_iterator first, const_iterator last) { return data.erase(first, last); }
 
       // написать тесты
       std::pair<std::string&, std::string&> extract(const_iterator position) {
