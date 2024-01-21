@@ -38,6 +38,9 @@ namespace ini {
       section() {}
       explicit section(std::string_view string_name) : name{ string_name } {}
       explicit section(std::string&& string_name) noexcept : name{ string_name } {}
+      section(const section& rhs);
+      section(section&& rhs) noexcept;
+      ~section() {}
 
       iterator       begin() noexcept { return data.begin(); }
       const_iterator begin() const noexcept { return data.begin(); }
@@ -129,7 +132,9 @@ namespace ini {
    public:
     ini() {}
     ini(const fs::path&);
+    ini(const ini& rhs) : data{ std::move(rhs.data) } {}
     ini(ini&& rhs) noexcept : data{ std::move(rhs.data) } {}
+    ~ini() {}
 
     iterator       begin() noexcept { return data.begin(); }
     const_iterator begin() const noexcept { return data.begin(); }

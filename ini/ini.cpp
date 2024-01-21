@@ -3,6 +3,8 @@
 #include <iostream>
 #include <string>
 
+#include "ini.h"
+
 namespace ini {
 
   std::ostream& ini::dump(std::ostream& os) {
@@ -192,6 +194,15 @@ namespace ini {
   }
 
   ini::ini(const fs::path& path) { data = std::move(parse_from_file(path).data); }
+
+  ini::section::section(const ini::section& rhs) {
+    name = rhs.name;
+    data = rhs.data;
+  }
+  ini::section::section(section&& rhs) noexcept {
+    name = rhs.name;
+    data = rhs.data;
+  }
 
   std::string& ini::section::operator[](const std::string& key) {
     using namespace std::string_literals;
