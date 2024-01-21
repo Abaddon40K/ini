@@ -59,11 +59,56 @@ TEST(section, clear) {
   EXPECT_EQ(s.empty(), 1);
 }
 
+TEST(section, find) {
+  ini::ini::section s(std::string{ "name" });
+  s.emplace(std::string{ "first" }, std::string{ "second" });
+  EXPECT_EQ(s.find("first"), s.begin());
+  EXPECT_EQ(s.find("first_1"), s.end());
+}
+
 TEST(section, erase) {
   ini::ini::section s(std::string{ "name" });
   s.emplace(std::string{ "first" }, std::string{ "second" });
   s.emplace(std::string{ "first_1" }, std::string{ "second_1" });
   s.erase("first");
+  EXPECT_EQ(s.find("first"), s.end());
+  EXPECT_NE(s.find("first_1"), s.end());
+
+  s.clear();
+  s.emplace(std::string{ "first" }, std::string{ "second" });
+  s.emplace(std::string{ "first_1" }, std::string{ "second_1" });
+  auto key_1 = s.begin()->first;
+  auto key_2 = (++s.begin())->first;
+  s.erase(s.begin());
+  EXPECT_EQ(s.find(key_1), s.end());
+  EXPECT_NE(s.find(key_2), s.end());
+
+  s.clear();
+  s.emplace(std::string{ "first" }, std::string{ "second" });
+  s.emplace(std::string{ "first_1" }, std::string{ "second_1" });
+  key_1 = s.begin()->first;
+  key_2 = (++s.begin())->first;
+  s.erase(s.begin(), s.end());
+  EXPECT_EQ(s.find(key_1), s.end());
+  EXPECT_EQ(s.find(key_2), s.end());
+
+  s.clear();
+  s.emplace(std::string{ "first" }, std::string{ "second" });
+  s.emplace(std::string{ "first_1" }, std::string{ "second_1" });
+  auto ckey_1 = s.begin()->first;
+  auto ckey_2 = (++s.begin())->first;
+  s.erase(s.cbegin());
+  EXPECT_EQ(s.find(ckey_1), s.end());
+  EXPECT_NE(s.find(ckey_2), s.end());
+
+  s.clear();
+  s.emplace(std::string{ "first" }, std::string{ "second" });
+  s.emplace(std::string{ "first_1" }, std::string{ "second_1" });
+  key_1 = s.begin()->first;
+  key_2 = (++s.begin())->first;
+  s.erase(s.cbegin(), s.cend());
+  EXPECT_EQ(s.find(key_1), s.end());
+  EXPECT_EQ(s.find(key_2), s.end());
 }
 
 TEST(section, empty) {
