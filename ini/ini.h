@@ -55,7 +55,7 @@ namespace ini {
       const_iterator cbegin() const noexcept { return data.cbegin(); }
       const_iterator cend() const noexcept { return data.cend(); }
 
-      void clear() { data.clear(); }
+      void clear() noexcept { data.clear(); }
 
       bool empty() const noexcept { return data.empty(); }
 
