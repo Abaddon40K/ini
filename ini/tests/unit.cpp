@@ -33,40 +33,43 @@ const std::string& get_raw_ini() {
 
 TEST(section, emplace) {
   ini::ini::section s(std::string{ "name" });
-  s.emplace(std::pair{ std::string{ "first" }, std::string{ "second" } });
+  s.emplace(std::string{ "first" }, std::string{ "second" });
   EXPECT_STREQ(s["first"].c_str(), "second");
-//  s.emplace(std::pair{ std::string{ "first_1" }, std::string{ "second_1" } },
-//            std::pair{ std::string{ "first_2" }, std::string{ "second_2" } },
-//            std::pair{ std::string{ "first_3" }, std::string{ "second_3" } },
-//            std::pair{ std::string{ "first_4" }, std::string{ "second_4" } });
-//  EXPECT_STREQ(s["first_1"].c_str(), "second_1");
-//  EXPECT_STREQ(s["first_2"].c_str(), "second_2");
-//  EXPECT_STREQ(s["first_3"].c_str(), "second_3");
-//  EXPECT_STREQ(s["first_4"].c_str(), "second_4");
+
+  s.emplace(std::string{ "first_1" }, std::string{ "second_1" });
+  s.emplace(std::string{ "first_2" }, std::string{ "second_2" });
+  s.emplace(std::string{ "first_3" }, std::string{ "second_3" });
+  s.emplace(std::string{ "first_4" }, std::string{ "second_4" });
+
+  EXPECT_STREQ(s["first_1"].c_str(), "second_1");
+  EXPECT_STREQ(s["first_2"].c_str(), "second_2");
+  EXPECT_STREQ(s["first_3"].c_str(), "second_3");
+  EXPECT_STREQ(s["first_4"].c_str(), "second_4");
 }
 
-//TEST(section, clear) {
-//  ini::ini::section s(std::string{ "name" });
-//  s.emplace(std::pair{ std::string{ "first" }, std::string{ "second" } },
-//            std::pair{ std::string{ "first_1" }, std::string{ "second_1" } },
-//            std::pair{ std::string{ "first_2" }, std::string{ "second_2" } },
-//            std::pair{ std::string{ "first_3" }, std::string{ "second_3" } },
-//            std::pair{ std::string{ "first_4" }, std::string{ "second_4" } });
-//  s.clear();
-//  EXPECT_EQ(s.empty(), 1);
-//}
+TEST(section, clear) {
+  ini::ini::section s(std::string{ "name" });
+  s.emplace(std::string{ "first" }, std::string{ "second" } );
+  s.emplace(std::string{ "first_1" }, std::string{ "second_1" });
+  s.emplace(std::string{ "first_2" }, std::string{ "second_2" });
+  s.emplace(std::string{ "first_3" }, std::string{ "second_3" });
+  s.emplace(std::string{ "first_4" }, std::string{ "second_4" });
+  EXPECT_EQ(s.size(), 5);
+  s.clear();
+  EXPECT_EQ(s.empty(), 1);
+}
 
-//TEST(section, erase) {
-//  ini::ini::section s(std::string{ "name" });
-//  s.emplace(std::pair{ std::string{ "first" }, std::string{ "second" } },
-//            std::pair{ std::string{ "first_1" }, std::string{ "second_1" } });
-//  s.erase("first");
-//}
+TEST(section, erase) {
+  ini::ini::section s(std::string{ "name" });
+  s.emplace(std::string{ "first" }, std::string{ "second" });
+  s.emplace(std::string{ "first_1" }, std::string{ "second_1" });
+  s.erase("first");
+}
 
 TEST(section, empty) {
   ini::ini::section s(std::string{ "name" });
   EXPECT_EQ(s.empty(), 1);
-  s.emplace(std::pair{ std::string{ "first" }, std::string{ "second" } });
+  s.emplace(std::string{ "first" }, std::string{ "second" });
   EXPECT_EQ(s.empty(), 0);
 }
 
@@ -151,7 +154,7 @@ TEST(ini, insert) {
   EXPECT_STREQ(ini["Hello"].name.c_str(), "Hello");
   // ini::ini::section s2(std::string{ "Hello" }, { std::string{ "first" }, std::string{ "second" } });
   s.name = std::string{ "Hello 2" };
-  s.emplace(std::pair{ std::string{ "first" }, std::string{ "second" } });
+  s.emplace( std::string{ "first" }, std::string{ "second" });
   ini.insert(s);
   EXPECT_STREQ(ini["Hello 2"].name.c_str(), "Hello 2");
   EXPECT_STREQ(ini["Hello 2"]["first"].c_str(), "second");
