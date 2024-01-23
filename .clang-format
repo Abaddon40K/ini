@@ -1,5 +1,6 @@
 ---
 BasedOnStyle: Chromium
+SortIncludes: false 
 AlignArrayOfStructures: Left
 AlignConsecutiveAssignments:
   Enabled: true
