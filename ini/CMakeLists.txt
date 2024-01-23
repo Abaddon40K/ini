@@ -5,7 +5,7 @@ set(INI_HDR
 set(INI_SRC
     ini.cpp
     mmap.h
-    mmap.cpp 
+    mmap.cpp
 )
 
 set(MY_COMPILE_FLAGS )
@@ -17,9 +17,64 @@ list(APPEND INI_SRC ${INI_HDR})
 add_library(ini_object OBJECT)
 target_sources(ini_object PRIVATE ${INI_SRC})
 
+if(UNIX)
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        list(APPEND MY_COMPILE_FLAGS
+            -Wall
+            -Wextra
+            -Wpedantic
+            -Werror=undef
+            -Wmissing-include-dirs
+            -Wpointer-arith
+            -Winit-self
+            -Wfloat-equal
+            -Werror=return-type
+            -Werror=format=2
+            -Wredundant-decls
+            -Wmissing-noreturn
+            -Wshadow
+            -Wendif-labels
+            -Wstrict-aliasing
+            -Wwrite-strings
+            -Werror=overflow
+            -Werror=shift-count-overflow
+            -Wdate-time
+            -Wshadow
+            -Wconversion
+            -Wuninitialized
+            -Wnull-dereference
+            -Wattributes
+            -Warray-bounds
+            -Wcast-qual
+            -Wcast-align
+            -Wdelete-non-virtual-dtor
+            -Werror=date-time
+            -Wimplicit-fallthrough
+            -Wreorder
+
+            -fPIC
+            -fstack-protector-all
+        )
+    endif()
+
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        add_compile_options(
+            -Wlogical-op
+            -Wunused-const-variable=2
+            -Warith-conversion
+            -Wduplicated-branches
+            -Wstrict-aliasing=3
+            -Wmissing-noreturn
+
+            -Walloca-larger-than=4096
+            )
+    endif()
+endif()
+
+
 if(BUILD_RELEASE)
     if(WIN32)
-        #list(APPEND MY_COMPILE_FLAGS "/O2") 
+        #list(APPEND MY_COMPILE_FLAGS "/O2")
     elseif(UNIX)
         list(APPEND MY_COMPILE_FLAGS -O3)
     endif()

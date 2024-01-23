@@ -3,6 +3,7 @@
 #include <cctype>
 #include <filesystem>
 #include <fstream>
+#include <functional>
 #include <string>
 #include <type_traits>
 #include <unordered_map>
@@ -43,7 +44,11 @@ namespace ini {
         data.emplace(std::forward<Args>(args)...);
       }
       section(const section& rhs) : name{ rhs.name }, data{ rhs.data } {}
-      section(section&& rhs) noexcept : name{ rhs.name }, data{ rhs.data } {}
+      section(section&& rhs) noexcept : name{ std::move(rhs.name) }, data{ std::move(rhs.data) } {}
+
+      section& operator=(const section&);
+      section& operator=(section&&);
+
       ~section() {}
 
       iterator       begin() noexcept { return data.begin(); }
@@ -55,9 +60,10 @@ namespace ini {
       const_iterator cbegin() const noexcept { return data.cbegin(); }
       const_iterator cend() const noexcept { return data.cend(); }
 
-      void clear() noexcept { data.clear(); }
-
-      bool empty() const noexcept { return data.empty(); }
+      void clear() {
+        name = {};
+        data.clear();
+      }
 
       std::size_t erase(const std::string& key) { return data.erase(key); }
       iterator    erase(iterator it) { return data.erase(it); }
@@ -68,6 +74,7 @@ namespace ini {
         auto node = data.extract(position);
         return { node.key(), node.mapped() };
       }
+      // extract by key
 
       iterator       find(const std::string& key) { return data.find(key); }
       const_iterator find(const std::string& key) const { return data.find(key); }
@@ -93,6 +100,8 @@ namespace ini {
         std::swap(name, rhs.name);
       }
 
+      bool empty() const noexcept { return data.empty(); }
+
       template<typename... Args>
       std::pair<iterator, bool> emplace(Args&&... args) {
         return data.emplace(std::forward<Args>(args)...);
@@ -107,16 +116,11 @@ namespace ini {
         return data.try_emplace(key, std::forward<Args>(args)...);
       }
 
-      std::string& operator[](const std::string&);
+      std::string&       operator[](const std::string&);
+      const std::string& operator[](const std::string&) const;
 
-      section& operator=(const section&);
-      section&     operator=(section&&);
-
-      bool operator==(const section&);
-      bool operator==(section&&);
-
-      bool operator!=(const section& rhs) { return !(*this == rhs); }
-      bool operator!=(section&& rhs) { return !(*this == rhs); }
+      bool operator==(const section&) const noexcept;
+      bool operator!=(const section& rhs) const noexcept { return !(*this == rhs); }
 
      public:
       std::string name;
@@ -125,9 +129,9 @@ namespace ini {
       data_type data;
     };
 
+
    public:
-    using data_type = std::vector<section>;
-    // using data_type = std::unordered_map<std::string, section>;
+    using data_type      = std::unordered_map<std::string, section>;
     using iterator       = data_type::iterator;
     using const_iterator = data_type::const_iterator;
 
@@ -136,6 +140,10 @@ namespace ini {
     ini(const fs::path&);
     ini(const ini& rhs) : data{ rhs.data } {}
     ini(ini&& rhs) noexcept : data{ std::move(rhs.data) } {}
+
+    ini& operator=(const ini&);
+    ini& operator=(ini&&);
+
     ~ini() {}
 
     iterator       begin() noexcept { return data.begin(); }
@@ -151,30 +159,32 @@ namespace ini {
 
     bool empty() const noexcept { return data.empty(); }
 
-    iterator erase(const_iterator begin, const_iterator end) { return data.erase(begin, end); }
-    iterator erase(iterator it) { return data.erase(it); }
+    std::size_t erase(const std::string& name) { return data.erase(name); }
+    iterator    erase(iterator it) { return data.erase(it); }
 
     void swap(ini& rhs) noexcept { std::swap(data, rhs.data); }
 
-    void insert(const section& s) { data.push_back(s); }
-    void insert(section&& s) { data.push_back(s); }
+    void insert(const section& s) { data.insert({ s.name, s }); }
+    void insert(section&& s) {
+      std::string name = s.name;
+      data.insert({ std::move(name), s });
+    }
     template<typename... Args>
     void insert(std::string section_name, Args... args);
 
     std::size_t size() { return data.size(); }
 
-    // section& unsafe_access(std::size_t element) { return data[element]; }
+    section&       unsafe_access(const std::string&);
+    const section& unsafe_access(const std::string&) const;
 
-    section& operator[](std::string);
+    section&       operator[](const std::string&);
+    const section& operator[](const std::string&) const;
 
-    ini& operator=(const ini&);
-    ini& operator=(ini&&);
+    iterator       find(const std::string& name) { return data.find(name); }
+    const_iterator find(const std::string& name) const { return data.find(name); }
 
-    bool operator==(const ini&);
-    bool operator==(ini&&);
-
-    bool operator!=(const ini& rhs) { return !(*this == rhs); }
-    bool operator!=(ini&& rhs) { return !(*this == rhs); }
+    bool operator==(const ini&) const noexcept;
+    bool operator!=(const ini& rhs) const noexcept { return !(*this == rhs); }
 
     std::ostream& dump(std::ostream&);
 
@@ -191,7 +201,7 @@ namespace ini {
     }
   }  // namespace detail
 
-  
+
 
   ini parse(std::string_view);
   ini parse_from_file(const fs::path&);
@@ -200,6 +210,6 @@ namespace ini {
   inline void ini::insert(std::string section_name, Args... args) {
     section temp{ section_name };
     detail::insert_helper(temp, args...);
-    data.push_back(std::move(temp));
+    data.insert({ section_name, std::move(temp) });
   }
 }  // namespace ini
