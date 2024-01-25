@@ -1,13 +1,9 @@
 #pragma once
-#include <algorithm>
 #include <cctype>
 #include <filesystem>
 #include <fstream>
-#include <functional>
 #include <string>
-#include <type_traits>
 #include <unordered_map>
-#include <vector>
 
 /*
  *  TODO: Добавить политики для ini
@@ -19,7 +15,8 @@ namespace ini {
   constexpr inline char        separator     = '=';
   constexpr inline std::size_t breacket_len  = sizeof(section_begin);
   constexpr inline std::size_t separator_len = sizeof(separator);
-  namespace fs                               = std::filesystem;
+
+  namespace fs = std::filesystem;
 
   struct section;
 
@@ -41,13 +38,15 @@ namespace ini {
       explicit section(std::string&& string_name) noexcept : name{ string_name } {}
       template<typename... Args>
       section(std::string_view string_name, Args&&... args) : name{ string_name } {
+        // Кажется, мы записываем лишь первый элемент пачки?
+          // UPD: Проверил тестами, не работает)
         data.emplace(std::forward<Args>(args)...);
       }
       section(const section& rhs) : name{ rhs.name }, data{ rhs.data } {}
       section(section&& rhs) noexcept : name{ std::move(rhs.name) }, data{ std::move(rhs.data) } {}
 
       section& operator=(const section&);
-      section& operator=(section&&);
+      section& operator=(section&&) noexcept;
 
       ~section() {}
 
@@ -60,25 +59,6 @@ namespace ini {
       const_iterator cbegin() const noexcept { return data.cbegin(); }
       const_iterator cend() const noexcept { return data.cend(); }
 
-      void clear() {
-        name = {};
-        data.clear();
-      }
-
-      std::size_t erase(const std::string& key) { return data.erase(key); }
-      iterator    erase(iterator it) { return data.erase(it); }
-      iterator    erase(const_iterator it) { return data.erase(it); }
-
-      // написать тесты
-      std::pair<std::string&, std::string&> extract(const_iterator position) {
-        auto node = data.extract(position);
-        return { node.key(), node.mapped() };
-      }
-      // extract by key
-
-      iterator       find(const std::string& key) { return data.find(key); }
-      const_iterator find(const std::string& key) const { return data.find(key); }
-
       // overwrite
       std::pair<iterator, bool> insert(const value_type& pair) { return data.insert(pair); }
       // overwrite
@@ -90,17 +70,6 @@ namespace ini {
       std::pair<iterator, bool> insert_or_assign(const std::string& key, std::string&& val) {
         return data.insert_or_assign(key, val);
       }
-
-      void reserve(std::size_t count) { data.reserve(count); }
-
-      std::size_t size() const noexcept { return data.size(); }
-
-      void swap(section& rhs) noexcept {
-        std::swap(data, rhs.data);
-        std::swap(name, rhs.name);
-      }
-
-      bool empty() const noexcept { return data.empty(); }
 
       template<typename... Args>
       std::pair<iterator, bool> emplace(Args&&... args) {
@@ -119,14 +88,51 @@ namespace ini {
       std::string&       operator[](const std::string&);
       const std::string& operator[](const std::string&) const;
 
+      iterator       find(const std::string& key) { return data.find(key); }
+      const_iterator find(const std::string& key) const { return data.find(key); }
+
+      std::string&      unsafe_access(const std::string& key) { return data.find(key)->second; }
+      const std::string unsafe_access(const std::string& key) const { return data.find(key)->second; }
+
+      void swap(section& rhs) noexcept {
+        std::swap(data, rhs.data);
+        std::swap(name, rhs.name);
+      }
+
+      std::size_t size() const noexcept { return data.size(); }
+
+      std::size_t erase(const std::string& key) { return data.erase(key); }
+      iterator    erase(iterator it) { return data.erase(it); }
+      iterator    erase(const_iterator it) { return data.erase(it); }
+
+      // написать тесты
+      std::pair<std::string&, std::string&> extract(const_iterator position) {
+        auto node = data.extract(position);
+        return { node.key(), node.mapped() };
+      }
+      // extract by key
+      std::pair<std::string&, std::string&> extract(const std::string key) {
+        auto node = data.extract(key);
+        return { node.key(), node.mapped() };
+      }
+
+      void clear() {
+        name = {};
+        data.clear();
+      }
+      bool empty() const noexcept { return data.empty(); }
+      void reserve(std::size_t count) { data.reserve(count); }
+
       bool operator==(const section&) const noexcept;
       bool operator!=(const section& rhs) const noexcept { return !(*this == rhs); }
 
+      std::ostream& dump(std::ostream&);
+
      public:
-      std::string name;
+      std::string name{};
 
      private:
-      data_type data;
+      data_type data{};
     };
 
 
@@ -142,7 +148,7 @@ namespace ini {
     ini(ini&& rhs) noexcept : data{ std::move(rhs.data) } {}
 
     ini& operator=(const ini&);
-    ini& operator=(ini&&);
+    ini& operator=(ini&&) noexcept;
 
     ~ini() {}
 
@@ -155,14 +161,6 @@ namespace ini {
     const_iterator cbegin() const noexcept { return data.cbegin(); }
     const_iterator cend() const noexcept { return data.cend(); }
 
-    void clear() noexcept { data.clear(); }
-
-    bool empty() const noexcept { return data.empty(); }
-
-    std::size_t erase(const std::string& name) { return data.erase(name); }
-    iterator    erase(iterator it) { return data.erase(it); }
-
-    void swap(ini& rhs) noexcept { std::swap(data, rhs.data); }
 
     void insert(const section& s) { data.insert({ s.name, s }); }
     void insert(section&& s) {
@@ -172,16 +170,58 @@ namespace ini {
     template<typename... Args>
     void insert(std::string section_name, Args... args);
 
-    std::size_t size() { return data.size(); }
+    std::pair<iterator, bool> insert_or_assign(std::string&& key, section&& val) {
+      return data.insert_or_assign(key, val);
+    }
+    std::pair<iterator, bool> insert_or_assign(const std::string& key, section&& val) {
+      return data.insert_or_assign(key, val);
+    }
 
-    section&       unsafe_access(const std::string&);
-    const section& unsafe_access(const std::string&) const;
+    template<typename... Args>
+    std::pair<iterator, bool> emplace(Args&&... args) {
+      return data.emplace(std::forward<Args>(args)...);
+    }
+
+    template<typename... Args>
+    std::pair<iterator, bool> try_emplace(const std::string& key, Args&&... args) {
+      return data.try_emplace(key, std::forward<Args>(args)...);
+    }
+    template<typename... Args>
+    std::pair<iterator, bool> try_emplace(std::string&& key, Args&&... args) {
+      return data.try_emplace(key, std::forward<Args>(args)...);
+    }
 
     section&       operator[](const std::string&);
     const section& operator[](const std::string&) const;
 
     iterator       find(const std::string& name) { return data.find(name); }
     const_iterator find(const std::string& name) const { return data.find(name); }
+
+    section&       unsafe_access(const std::string& key) { return data.find(key)->second; }
+    const section& unsafe_access(const std::string& key) const { return data.find(key)->second; }
+
+    void swap(ini& rhs) noexcept { std::swap(data, rhs.data); }
+
+    std::size_t size() const noexcept { return data.size(); }
+
+    std::size_t erase(const std::string& name) { return data.erase(name); }
+    iterator    erase(iterator it) { return data.erase(it); }
+    iterator    erase(const_iterator it) { return data.erase(it); }
+
+    // написать тесты
+    std::pair<std::string&, section&> extract(const_iterator position) {
+      auto node = data.extract(position);
+      return { node.key(), node.mapped() };
+    }
+    // extract by key
+    std::pair<std::string&, section&> extract(const std::string key) {
+      auto node = data.extract(key);
+      return { node.key(), node.mapped() };
+    }
+
+    void clear() noexcept { data.clear(); }
+    bool empty() const noexcept { return data.empty(); }
+    void reserve(std::size_t count) { data.reserve(count); }
 
     bool operator==(const ini&) const noexcept;
     bool operator!=(const ini& rhs) const noexcept { return !(*this == rhs); }
@@ -192,8 +232,12 @@ namespace ini {
     data_type data{};
   };
 
+
+
   namespace detail {
+    // Зачем он нам?
     inline auto insert_helper(ini::section&) {}
+
     template<typename Head, typename... Args>
     inline auto insert_helper(ini::section& temp, Head head, Args... args) {
       temp.insert(head);
@@ -205,6 +249,8 @@ namespace ini {
 
   ini parse(std::string_view);
   ini parse_from_file(const fs::path&);
+
+
 
   template<typename... Args>
   inline void ini::insert(std::string section_name, Args... args) {

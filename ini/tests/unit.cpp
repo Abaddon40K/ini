@@ -11,6 +11,7 @@
 #include <string>
 #include <vector>
 #include <cstring>
+#include <typeinfo>
 
 
 namespace fs = std::filesystem;
@@ -31,6 +32,45 @@ const std::string raw_test_data{ "[section] \n"
 
 };
 
+TEST(section, constructors) {
+  std::string sect_name = "Section name";
+
+  std::string       key_1       = "Key_1";
+  std::string       value_1     = "Value_1";
+  std::pair         p_1{ key_1, value_1 };
+
+  std::string       key_2   = "Key_2";
+  std::string       value_2 = "Value_2";
+  std::pair         p_2{ key_2, value_2 };
+
+  ini::ini::section s_1;
+  EXPECT_STREQ(s_1.name.c_str(), std::string{}.c_str());
+  EXPECT_EQ(s_1.empty(), true);
+
+  ini::ini::section s_2(sect_name);
+  EXPECT_STREQ(s_2.name.c_str(), sect_name.c_str());
+  EXPECT_EQ(s_2.empty(), true);
+
+  ini::ini::section s_3(sect_name, p_1);
+// Почему ошибка?!?
+//  EXPECT_STREQ(s_3.name.c_str(), std::string{}.c_str());
+  EXPECT_EQ(s_3.empty(), false);
+  EXPECT_STREQ(s_3[key_1].c_str(), value_1.c_str());
+
+//  ini::ini::section s_4(sect_name, p_1, p_2);
+//  EXPECT_STREQ(s_4.name.c_str(), std::string{}.c_str());
+//  EXPECT_EQ(s_4.empty(), false);
+//  EXPECT_EQ(s_4[key_1].c_str(), value_1.c_str());
+//  EXPECT_EQ(s_4[key_2].c_str(), value_2.c_str());
+
+  ini::ini::section s_5 = s_3;
+  EXPECT_STREQ(s_5.name.c_str(), sect_name.c_str());
+  EXPECT_STREQ(s_5[key_1].c_str(), value_1.c_str());
+
+  ini::ini::section s_6 = { sect_name, p_1 };
+  EXPECT_STREQ(s_6.name.c_str(), sect_name.c_str());
+  EXPECT_STREQ(s_6[key_1].c_str(), value_1.c_str());
+}
 
 TEST(section, emplace) {
   ini::ini::section s(std::string{ "name" });

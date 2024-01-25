@@ -1,51 +1,8 @@
 #include "ini.h"
 
 #include <iostream>
-#include <string>
-
-#include "ini.h"
 
 namespace ini {
-
-  std::ostream& ini::dump(std::ostream& os) {
-    for(const auto& [name, sect]: data) {
-      os << section_begin << name << section_end << '\n';
-      for(const auto& [key, value]: sect)
-        os << key << separator << value << '\n';
-    }
-    return os;
-  }
-
-  ini::section&       ini::unsafe_access(const std::string& key) { return data.find(key)->second; }
-  const ini::section& ini::unsafe_access(const std::string& key) const { return data.find(key)->second; }
-
-  ini::section& ini::operator[](const std::string& name) {
-    using namespace std::string_literals;
-
-    auto result = data.find(name);
-    if(data.end() != result) return result->second;
-    else throw std::out_of_range{ "Requested section '"s + name + "' not found"s };
-  }
-
-  ini& ini::operator=(const ini& rhs) {
-    if(this != &rhs) data = rhs.data;
-    return *this;
-  }
-
-  ini& ini::operator=(ini&& rhs) {
-    if(this != &rhs) data = std::move(rhs.data);
-    return *this;
-  }
-
-  bool ini::operator==(const ini& rhs) const noexcept {
-    if(data.size() != rhs.data.size()) return false;
-
-    auto end = data.end();
-    for(auto i = data.begin(), j = rhs.data.begin(); i != end; ++i, ++j)
-      if(*i != *j) return false;
-
-    return true;
-  }
 
 
   ini parse(std::string_view str) {
@@ -183,9 +140,70 @@ namespace ini {
     return parse(data);
   }
 
-  ini::ini(const fs::path& path) { data = std::move(parse_from_file(path).data); }
+  ini::ini(const fs::path& path) : data{ std::move(parse_from_file(path).data) } {}
+
+  ini& ini::operator=(const ini& rhs) {
+    if(this != &rhs) data = rhs.data;
+    return *this;
+  }
+
+  ini& ini::operator=(ini&& rhs) noexcept {
+    if(this != &rhs) data = std::move(rhs.data);
+    return *this;
+  }
+
+  ini::section& ini::operator[](const std::string& name) {
+    using namespace std::string_literals;
+
+    auto result = data.find(name);
+    if(data.end() != result) return result->second;
+    else throw std::out_of_range{ "Requested section '"s + name + "' not found"s };
+  }
+
+  const ini::section& ini::operator[](const std::string& name) const {
+    using namespace std::string_literals;
+
+    auto result = data.find(name);
+    if(data.end() != result) return result->second;
+    else throw std::out_of_range{ "Requested section '"s + name + "' not found"s };
+  }
+
+  bool ini::operator==(const ini& rhs) const noexcept {
+    if(data.size() != rhs.data.size()) return false;
+
+    auto end = data.end();
+    for(auto i = data.begin(), j = rhs.data.begin(); i != end; ++i, ++j)
+      if(*i != *j) return false;
+
+    return true;
+  }
+
+  std::ostream& ini::dump(std::ostream& os) {
+    for(const auto& [name, sect]: data) {
+      os << section_begin << name << section_end << '\n';
+      for(const auto& [key, value]: sect)
+        os << key << separator << value << '\n';
+    }
+    return os;
+  }
 
 
+
+  ini::section& ini::section::operator=(const section& rhs) {
+    if(this != &rhs) {
+      data = rhs.data;
+      name = rhs.name;
+    }
+    return *this;
+  }
+
+  ini::section& ini::section::operator=(section&& rhs) noexcept {
+    if(this != &rhs) {
+      data = std::move(rhs.data);
+      name = std::move(rhs.name);
+    }
+    return *this;
+  }
 
   std::string& ini::section::operator[](const std::string& key) {
     using namespace std::string_literals;
@@ -201,23 +219,17 @@ namespace ini {
     else throw std::out_of_range{ "Requested key '"s + key + "' not found in section '"s + name + "'"s };
   }
 
-  ini::section& ini::section::operator=(const section& rhs) {
-    if(this != &rhs) {
-      data = rhs.data;
-      name = rhs.name;
-    }
-    return *this;
-  }
-  ini::section& ini::section::operator=(section&& rhs) {
-    if(this != &rhs) {
-      data = std::move(rhs.data);
-      name = std::move(rhs.name);
-    }
-    return *this;
-  }
-
   bool ini::section::operator==(const section& rhs) const noexcept {
     return ((name == rhs.name) && (data == rhs.data));
   }
+
+  std::ostream& ini::section::dump(std::ostream& os) {
+    for(const auto& [key, value]: data)
+      os << key << separator << value << '\n';
+
+    return os;
+  }
+
+
 
 }  // namespace ini
