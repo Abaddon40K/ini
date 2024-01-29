@@ -94,19 +94,13 @@ TEST(section, insert_or_assign) {
 
 TEST(section, emplace) {
   ini::ini::section s(std::string{ sect_name_1 });
-  s.emplace(p_1);
+  s.emplace(key_1, std::string{value_1});
   EXPECT_STREQ(s[key_1].c_str(), value_1.c_str());
 
   s.clear();
 
-  s.emplace(key_1, value_1);
+  s.emplace(std::string{key_1}, std::string{value_1});
   EXPECT_STREQ(s[key_1].c_str(), value_1.c_str());
-
-  s.clear();
-
-  //  s.emplace(p_1, p_2);
-  //  EXPECT_STREQ(s[key_1].c_str(), value_1.c_str());
-  //  EXPECT_STREQ(s[key_2].c_str(), value_2.c_str());
 }
 
 TEST(section, try_emplace) {
@@ -156,7 +150,8 @@ TEST(section, swap) {
   EXPECT_STREQ(s_2[key_1].c_str(), value_1.c_str());
   EXPECT_STREQ(s_2.name.c_str(), sect_name_1.c_str());
 
-  ini::ini::section::swap(s_1, s_2);
+  using ini::swap;
+  swap(s_1, s_2);
   EXPECT_STREQ(s_1[key_1].c_str(), value_1.c_str());
   EXPECT_STREQ(s_1.name.c_str(), sect_name_1.c_str());
   EXPECT_STREQ(s_2[key_2].c_str(), value_2.c_str());
@@ -175,23 +170,23 @@ TEST(section, clear) {
 TEST(section, erase) {
 
   ini::ini::section s(sect_name_1);
-  s.emplace(key_1, value_1);
-  s.emplace(key_2, value_2);
+  s.emplace(key_1, std::move(value_1));
+  s.emplace(key_2, std::move(value_2));
   s.erase(key_1);
   EXPECT_EQ(s.find(key_1), s.end());
   EXPECT_NE(s.find(key_2), s.end());
   s.clear();
 
-  s.emplace(key_1, value_1);
-  s.emplace(key_2, value_2);
+  s.emplace(key_1, std::move(value_1));
+  s.emplace(key_2, std::move(value_2));
   auto it = s.find(key_1);
   s.erase(it);
   EXPECT_EQ(s.find(key_1), s.end());
   EXPECT_NE(s.find(key_2), s.end());
   s.clear();
 
-  s.emplace(key_1, value_1);
-  s.emplace(key_2, value_2);
+  s.emplace(key_1, std::move(value_1));
+  s.emplace(key_2, std::move(value_2));
   auto cit = s.cbegin();
   auto b_key = cit->first;
   s.erase(cit);

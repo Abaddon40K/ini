@@ -36,14 +36,9 @@ namespace ini {
       section() {}
       explicit section(std::string_view string_name) : name{ string_name } {}
       explicit section(std::string&& string_name) noexcept : name{ string_name } {}
+
       template<typename... Args>
       section(std::string_view string_name, Args&&... args);
-      //: name{ string_name } {
-      //  // Кажется, мы записываем лишь первый элемент пачки?
-      //    // UPD: Проверил тестами, не работает)
-      //
-      //  data.emplace(std::forward<Args>(args)...);
-      //}
       section(const section& rhs) : name{ rhs.name }, data{ rhs.data } {}
       section(section&& rhs) noexcept : name{ std::move(rhs.name) }, data{ std::move(rhs.data) } {}
 
@@ -73,22 +68,12 @@ namespace ini {
         return data.insert_or_assign(key, val);
       }
 
+      std::pair<iterator, bool> emplace(const std::string& key, std::string&& val) {
+        return data.emplace(key, val);
+      }
 
-     //private:
-     // void emplace() {}
-     //
-     //public:
-      template<typename... Args>
-      std::pair<iterator, bool> emplace(Args&&... args) {
-        return data.emplace(std::forward<Args>(args)...);
-
-        //
-        //  Внимание! Тут ошибка логики, т.к. вернёт правильность вставки лишь первого элемента
-        //
-
-        //auto result = data.emplace(head);
-        //emplace(args...);
-        //return result;
+      std::pair<iterator, bool> emplace(std::string&& key, std::string&& val) {
+          return data.emplace(key, val);
       }
 
       template<typename... Args>
@@ -114,10 +99,6 @@ namespace ini {
         std::swap(name, rhs.name);
       }
 
-      static void swap(section& lhs, section& rhs) noexcept {
-        std::swap(lhs.data, rhs.data);
-        std::swap(lhs.name, rhs.name);
-      }
 
       std::size_t size() const noexcept { return data.size(); }
 
@@ -131,7 +112,7 @@ namespace ini {
         return { node.key(), node.mapped() };
       }
       // extract by key
-      std::pair<std::string&, std::string&> extract(const std::string key) {
+      std::pair<std::string&, std::string&> extract(const std::string& key) {
         auto node = data.extract(key);
         return { node.key(), node.mapped() };
       }
@@ -145,6 +126,8 @@ namespace ini {
 
       bool operator==(const section&) const noexcept;
       bool operator!=(const section& rhs) const noexcept { return !(*this == rhs); }
+
+      friend void swap(section& lhs, section& rhs) noexcept;
 
       std::ostream& dump(std::ostream&);
 
@@ -234,7 +217,7 @@ namespace ini {
       return { node.key(), node.mapped() };
     }
     // extract by key
-    std::pair<std::string&, section&> extract(const std::string key) {
+    std::pair<std::string&, section&> extract(const std::string& key) {
       auto node = data.extract(key);
       return { node.key(), node.mapped() };
     }
@@ -252,6 +235,10 @@ namespace ini {
     data_type data{};
   };
 
+  inline void swap(ini::section& lhs, ini::section& rhs) noexcept {
+      std::swap(lhs.data, rhs.data);
+      std::swap(lhs.name, rhs.name);
+  }
 
 
   namespace detail {
