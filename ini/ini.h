@@ -37,11 +37,13 @@ namespace ini {
       explicit section(std::string_view string_name) : name{ string_name } {}
       explicit section(std::string&& string_name) noexcept : name{ string_name } {}
       template<typename... Args>
-      section(std::string_view string_name, Args&&... args) : name{ string_name } {
-        // Кажется, мы записываем лишь первый элемент пачки?
-          // UPD: Проверил тестами, не работает)
-        data.emplace(std::forward<Args>(args)...);
-      }
+      section(std::string_view string_name, Args&&... args);
+      //: name{ string_name } {
+      //  // Кажется, мы записываем лишь первый элемент пачки?
+      //    // UPD: Проверил тестами, не работает)
+      //
+      //  data.emplace(std::forward<Args>(args)...);
+      //}
       section(const section& rhs) : name{ rhs.name }, data{ rhs.data } {}
       section(section&& rhs) noexcept : name{ std::move(rhs.name) }, data{ std::move(rhs.data) } {}
 
@@ -59,21 +61,34 @@ namespace ini {
       const_iterator cbegin() const noexcept { return data.cbegin(); }
       const_iterator cend() const noexcept { return data.cend(); }
 
-      // overwrite
       std::pair<iterator, bool> insert(const value_type& pair) { return data.insert(pair); }
-      // overwrite
       std::pair<iterator, bool> insert(value_type&& pair) { return data.insert(pair); }
+      template<typename... Args>
+      void insert(Args...);
 
-      std::pair<iterator, bool> insert_or_assign(std::string&& key, std::string&& val) {
-        return data.insert_or_assign(key, val);
-      }
       std::pair<iterator, bool> insert_or_assign(const std::string& key, std::string&& val) {
         return data.insert_or_assign(key, val);
       }
+      std::pair<iterator, bool> insert_or_assign(std::string&& key, std::string&& val) {
+        return data.insert_or_assign(key, val);
+      }
 
+
+     //private:
+     // void emplace() {}
+     //
+     //public:
       template<typename... Args>
       std::pair<iterator, bool> emplace(Args&&... args) {
         return data.emplace(std::forward<Args>(args)...);
+
+        //
+        //  Внимание! Тут ошибка логики, т.к. вернёт правильность вставки лишь первого элемента
+        //
+
+        //auto result = data.emplace(head);
+        //emplace(args...);
+        //return result;
       }
 
       template<typename... Args>
@@ -97,6 +112,11 @@ namespace ini {
       void swap(section& rhs) noexcept {
         std::swap(data, rhs.data);
         std::swap(name, rhs.name);
+      }
+
+      static void swap(section& lhs, section& rhs) noexcept {
+        std::swap(lhs.data, rhs.data);
+        std::swap(lhs.name, rhs.name);
       }
 
       std::size_t size() const noexcept { return data.size(); }
@@ -235,13 +255,28 @@ namespace ini {
 
 
   namespace detail {
-    // Зачем он нам?
     inline auto insert_helper(ini::section&) {}
 
     template<typename Head, typename... Args>
     inline auto insert_helper(ini::section& temp, Head head, Args... args) {
       temp.insert(head);
       insert_helper(temp, args...);
+    }
+
+    inline auto constructor_section_helper(ini::section::data_type&) {}
+
+    template<typename Head, typename... Args>
+    inline auto constructor_section_helper(ini::section::data_type& data, Head head, Args... args) {
+      data.emplace(head);
+      constructor_section_helper(data, args...);
+    }
+
+    template<typename Head, typename... Args>
+    inline ini::section::data_type constructor_section_helper(Head head, Args... args) {
+      ini::section::data_type data;
+      data.emplace(head);
+      constructor_section_helper(data, args...);
+      return data;
     }
   }  // namespace detail
 
@@ -250,7 +285,14 @@ namespace ini {
   ini parse(std::string_view);
   ini parse_from_file(const fs::path&);
 
+  template<typename... Args>
+  ini::section::section(std::string_view string_name, Args&&... args) :
+      name{ string_name }, data{ detail::constructor_section_helper(args...) } {}
 
+  template<typename... Args>
+  inline void ini::section::insert(Args... args) {
+    detail::insert_helper(*this, args...);
+  }
 
   template<typename... Args>
   inline void ini::insert(std::string section_name, Args... args) {
