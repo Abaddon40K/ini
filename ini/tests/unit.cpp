@@ -221,19 +221,6 @@ TEST(section, clear_and_empty) {
   ASSERT_TRUE(s.empty());
 }
 
-TEST(section, reserve) {
-  ini::ini::section s(sect_name_1);
-  EXPECT_EQ(s.size(), 0);
-  std::size_t reserve_count = 42;
-  s.reserve(reserve_count);
-
-  //
-  //  Damn, как проверить???
-  //
-
-  //  EXPECT_EQ(s.size(), reserve_count);
-}
-
 TEST(section, equality_and_inequality_operators) {
   ini::ini::section s_1(sect_name_1, p_1);
   ini::ini::section s_2(sect_name_1, p_1);
@@ -245,9 +232,18 @@ TEST(section, equality_and_inequality_operators) {
   ASSERT_FALSE(s_1 != s_2);
 }
 
-//
-//  Ќужен ли тест дл€ dump и если да, то как его написать?
-//
+TEST(section, dump) {
+    ini::ini::section s(sect_name_1, p_1);
+    std::ostringstream buff;
+    std::string str;
+    str += key_1;
+    str += ini::separator;
+    str += value_1;
+    str += '\n';
+
+    s.dump(buff);
+    EXPECT_STREQ(buff.str().c_str(), str.c_str());
+}
 
 
 TEST(ini, parse_from_string) {
@@ -267,17 +263,15 @@ TEST(ini, parse_from_files) {
 // Ќапомните, что это за тест?
 TEST(ini, range_based_for) {
   ini::ini ini = ini::parse(raw_test_data);
-  for(const auto& [name, sect]: ini) {
+  for(const auto& [name, sect] : ini) {
     EXPECT_FALSE(sect.empty());
     EXPECT_FALSE(sect.name.empty());
-    for(const auto& [key, value]: sect) {
+    for(const auto& [key, value] : sect) {
       EXPECT_FALSE(key.empty());
       EXPECT_FALSE(value.empty());
     }
   }
 }
-
-
 
 TEST(ini, constructors) {
   ini::ini ini_1{};
@@ -373,6 +367,8 @@ TEST(ini, try_emplace) {
 TEST(ini, square_brackets_operator) {
   ini::ini          ini{};
   ini::ini::section s_1{ sect_name_1, p_1 };
+  bool in_catch = false;
+
   ini.emplace(s_1);
   EXPECT_EQ(ini[sect_name_1], s_1);
   try {
@@ -380,7 +376,9 @@ TEST(ini, square_brackets_operator) {
   } catch(const std::out_of_range& e) {
     ASSERT_TRUE(std::strstr(e.what(), "not found"));
     ASSERT_TRUE(std::strstr(e.what(), sect_name_2.c_str()));
+    in_catch = true;
   }
+  ASSERT_TRUE(in_catch);
 }
 
 TEST(ini, find) {
@@ -388,6 +386,7 @@ TEST(ini, find) {
   ini::ini::section s_1{ sect_name_1, p_1 };
   ini.emplace(s_1);
   EXPECT_EQ(ini.find(sect_name_1)->second, s_1);
+  // not found
 }
 
 TEST(ini, unsafe_access) {

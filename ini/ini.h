@@ -108,7 +108,6 @@ namespace ini {
         data.clear();
       }
       bool empty() const noexcept { return data.empty(); }
-      void reserve(std::size_t count) { data.reserve(count); }
 
       bool operator==(const section&) const noexcept;
       bool operator!=(const section& rhs) const noexcept { return !(*this == rhs); }
@@ -197,7 +196,6 @@ namespace ini {
 
     void clear() noexcept { data.clear(); }
     bool empty() const noexcept { return data.empty(); }
-    void reserve(std::size_t count) { data.reserve(count); }
 
     bool operator==(const ini&) const noexcept;
     bool operator!=(const ini& rhs) const noexcept { return !(*this == rhs); }
