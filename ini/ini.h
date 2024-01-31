@@ -68,22 +68,13 @@ namespace ini {
         return data.insert_or_assign(key, val);
       }
 
-      std::pair<iterator, bool> emplace(const std::string& key, std::string&& val) {
-        return data.emplace(key, val);
-      }
+      std::pair<iterator, bool> emplace(const std::string& key, std::string&& val) { return data.emplace(key, val); }
+      std::pair<iterator, bool> emplace(std::string&& key, std::string&& val) { return data.emplace(key, val); }
 
-      std::pair<iterator, bool> emplace(std::string&& key, std::string&& val) {
-          return data.emplace(key, val);
+      std::pair<iterator, bool> try_emplace(const std::string& key, std::string&& val) {
+        return data.try_emplace(key, val);
       }
-
-      template<typename... Args>
-      std::pair<iterator, bool> try_emplace(const std::string& key, Args&&... args) {
-        return data.try_emplace(key, std::forward<Args>(args)...);
-      }
-      template<typename... Args>
-      std::pair<iterator, bool> try_emplace(std::string&& key, Args&&... args) {
-        return data.try_emplace(key, std::forward<Args>(args)...);
-      }
+      std::pair<iterator, bool> try_emplace(std::string&& key, std::string&& val) { return data.try_emplace(key, val); }
 
       std::string&       operator[](const std::string&);
       const std::string& operator[](const std::string&) const;
@@ -99,19 +90,16 @@ namespace ini {
         std::swap(name, rhs.name);
       }
 
-
       std::size_t size() const noexcept { return data.size(); }
 
       std::size_t erase(const std::string& key) { return data.erase(key); }
       iterator    erase(iterator it) { return data.erase(it); }
       iterator    erase(const_iterator it) { return data.erase(it); }
 
-      // написать тесты
       std::pair<std::string&, std::string&> extract(const_iterator position) {
         auto node = data.extract(position);
         return { node.key(), node.mapped() };
       }
-      // extract by key
       std::pair<std::string&, std::string&> extract(const std::string& key) {
         auto node = data.extract(key);
         return { node.key(), node.mapped() };
@@ -173,26 +161,13 @@ namespace ini {
     template<typename... Args>
     void insert(std::string section_name, Args... args);
 
-    std::pair<iterator, bool> insert_or_assign(std::string&& key, section&& val) {
-      return data.insert_or_assign(key, val);
-    }
-    std::pair<iterator, bool> insert_or_assign(const std::string& key, section&& val) {
-      return data.insert_or_assign(key, val);
-    }
+    std::pair<iterator, bool> insert_or_assign(section&& val) { return data.insert_or_assign(val.name, val); }
 
-    template<typename... Args>
-    std::pair<iterator, bool> emplace(Args&&... args) {
-      return data.emplace(std::forward<Args>(args)...);
-    }
+    std::pair<iterator, bool> emplace(const section& val) { return data.emplace(val.name, val); }
+    std::pair<iterator, bool> emplace(section&& val) { return data.emplace(val.name, val); }
 
-    template<typename... Args>
-    std::pair<iterator, bool> try_emplace(const std::string& key, Args&&... args) {
-      return data.try_emplace(key, std::forward<Args>(args)...);
-    }
-    template<typename... Args>
-    std::pair<iterator, bool> try_emplace(std::string&& key, Args&&... args) {
-      return data.try_emplace(key, std::forward<Args>(args)...);
-    }
+    std::pair<iterator, bool> try_emplace(const section& val) { return data.try_emplace(val.name, val); }
+    std::pair<iterator, bool> try_emplace(section&& val) { return data.try_emplace(val.name, val); }
 
     section&       operator[](const std::string&);
     const section& operator[](const std::string&) const;
@@ -229,6 +204,8 @@ namespace ini {
     bool operator==(const ini&) const noexcept;
     bool operator!=(const ini& rhs) const noexcept { return !(*this == rhs); }
 
+    friend void swap(ini& lhs, ini& rhs) noexcept;
+
     std::ostream& dump(std::ostream&);
 
    private:
@@ -236,10 +213,11 @@ namespace ini {
   };
 
   inline void swap(ini::section& lhs, ini::section& rhs) noexcept {
-      std::swap(lhs.data, rhs.data);
-      std::swap(lhs.name, rhs.name);
+    std::swap(lhs.data, rhs.data);
+    std::swap(lhs.name, rhs.name);
   }
 
+  inline void swap(ini& lhs, ini& rhs) noexcept { std::swap(lhs.data, rhs.data); }
 
   namespace detail {
     inline auto insert_helper(ini::section&) {}

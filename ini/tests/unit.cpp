@@ -46,20 +46,20 @@ std::pair<const std::string, std::string> p_2{ key_2, value_2 };
 TEST(section, constructors) {
   ini::ini::section s_1;
   EXPECT_STREQ(s_1.name.c_str(), std::string{}.c_str());
-  EXPECT_EQ(s_1.empty(), true);
+  ASSERT_TRUE(s_1.empty());
 
   ini::ini::section s_2(sect_name_1);
   EXPECT_STREQ(s_2.name.c_str(), sect_name_1.c_str());
-  EXPECT_EQ(s_2.empty(), true);
+  ASSERT_TRUE(s_2.empty());
 
   ini::ini::section s_3(sect_name_1, p_1);
   EXPECT_STREQ(s_3.name.c_str(), sect_name_1.c_str());
-  EXPECT_EQ(s_3.empty(), false);
+  ASSERT_FALSE(s_3.empty());
   EXPECT_STREQ(s_3[key_1].c_str(), value_1.c_str());
 
   ini::ini::section s_4(sect_name_1, p_1, p_2);
   EXPECT_STREQ(s_4.name.c_str(), sect_name_1.c_str());
-  EXPECT_EQ(s_4.empty(), false);
+  ASSERT_FALSE(s_4.empty());
   EXPECT_STREQ(s_4[key_1].c_str(), value_1.c_str());
   EXPECT_STREQ(s_4[key_2].c_str(), value_2.c_str());
 
@@ -79,7 +79,7 @@ TEST(section, insert) {
 
   std::string                   new_value = "New value";
   ini::ini::section::value_type p_n       = { p_1.first, new_value };
-  EXPECT_EQ(s_1.insert(p_n).second, false);
+  ASSERT_FALSE(s_1.insert(p_n).second);
 }
 
 TEST(section, insert_or_assign) {
@@ -89,35 +89,27 @@ TEST(section, insert_or_assign) {
 
   std::string                   new_value = "New value";
   ini::ini::section::value_type p_n       = { p_1.first, new_value };
-  EXPECT_EQ(s_1.insert_or_assign(p_n.first, p_n.second.c_str()).second, false);
+  ASSERT_FALSE(s_1.insert_or_assign(p_n.first, p_n.second.c_str()).second);
 }
 
 TEST(section, emplace) {
-  ini::ini::section s(std::string{ sect_name_1 });
-  s.emplace(key_1, std::string{value_1});
+  ini::ini::section s(sect_name_1);
+  s.emplace(key_1, std::string{ value_1 });
   EXPECT_STREQ(s[key_1].c_str(), value_1.c_str());
 
   s.clear();
 
-  s.emplace(std::string{key_1}, std::string{value_1});
+  s.emplace(std::string{ key_1 }, std::string{ value_1 });
   EXPECT_STREQ(s[key_1].c_str(), value_1.c_str());
 }
 
 TEST(section, try_emplace) {
-  //  WRONG TESTS
-  ini::ini::section s(std::string{ "name" });
-  s.try_emplace(std::string{ "first" }, std::string{ "second" });
-  EXPECT_STREQ(s["first"].c_str(), "second");
+  ini::ini::section s(sect_name_1);
+  s.try_emplace(key_1, std::string{ value_1 });
+  EXPECT_STREQ(s[key_1].c_str(), value_1.c_str());
 
-  s.try_emplace(std::string{ "first_1" }, std::string{ "second_1" });
-  s.try_emplace(std::string{ "first_2" }, std::string{ "second_2" });
-  s.try_emplace(std::string{ "first_3" }, std::string{ "second_3" });
-  s.try_emplace(std::string{ "first_4" }, std::string{ "second_4" });
-
-  EXPECT_STREQ(s["first_1"].c_str(), "second_1");
-  EXPECT_STREQ(s["first_2"].c_str(), "second_2");
-  EXPECT_STREQ(s["first_3"].c_str(), "second_3");
-  EXPECT_STREQ(s["first_4"].c_str(), "second_4");
+  s.try_emplace(key_1, std::string{ value_2 });
+  EXPECT_STREQ(s[key_1].c_str(), value_1.c_str());
 }
 
 TEST(section, square_brackets_operator) {
@@ -131,13 +123,15 @@ TEST(section, square_brackets_operator) {
   }
 }
 
+TEST(section, find) {
+  ini::ini::section s(sect_name_1, p_1);
+  EXPECT_EQ(s.find(key_1)->second, value_1);
+  EXPECT_EQ(s.find(key_2), s.end());
+}
+
 TEST(section, unsafe_access) {
   ini::ini::section s(sect_name_1, p_1);
   EXPECT_STREQ(s.unsafe_access(key_1).c_str(), value_1.c_str());
-
-  //  Как проверить, если find возвразщает итератор, а мы решили возвращать только значение? Тогда мы возвращаем second
-  //  у итератора end
-  //  EXPECT_EQ(s.unsafe_access(key_2), s.end()->second);
 }
 
 TEST(section, swap) {
@@ -151,6 +145,7 @@ TEST(section, swap) {
   EXPECT_STREQ(s_2.name.c_str(), sect_name_1.c_str());
 
   using ini::swap;
+  using std::swap;
   swap(s_1, s_2);
   EXPECT_STREQ(s_1[key_1].c_str(), value_1.c_str());
   EXPECT_STREQ(s_1.name.c_str(), sect_name_1.c_str());
@@ -158,36 +153,35 @@ TEST(section, swap) {
   EXPECT_STREQ(s_2.name.c_str(), sect_name_2.c_str());
 }
 
-TEST(section, clear) {
+TEST(section, size) {
   ini::ini::section s(sect_name_1);
-  s.insert(p_1, p_2);
-  EXPECT_EQ(s.size(), 2);
-  s.clear();
   EXPECT_EQ(s.size(), 0);
-  EXPECT_EQ(s.empty(), true);
+  s.insert(p_1);
+  EXPECT_EQ(s.size(), 1);
+  s.insert(p_2);
+  EXPECT_EQ(s.size(), 2);
 }
 
 TEST(section, erase) {
-
   ini::ini::section s(sect_name_1);
-  s.emplace(key_1, std::move(value_1));
-  s.emplace(key_2, std::move(value_2));
+  s.emplace(key_1, std::string{ value_1 });
+  s.emplace(key_2, std::string{ value_2 });
   s.erase(key_1);
   EXPECT_EQ(s.find(key_1), s.end());
   EXPECT_NE(s.find(key_2), s.end());
   s.clear();
 
-  s.emplace(key_1, std::move(value_1));
-  s.emplace(key_2, std::move(value_2));
+  s.emplace(key_1, std::string{ value_1 });
+  s.emplace(key_2, std::string{ value_2 });
   auto it = s.find(key_1);
   s.erase(it);
   EXPECT_EQ(s.find(key_1), s.end());
   EXPECT_NE(s.find(key_2), s.end());
   s.clear();
 
-  s.emplace(key_1, std::move(value_1));
-  s.emplace(key_2, std::move(value_2));
-  auto cit = s.cbegin();
+  s.emplace(key_1, std::string{ value_1 });
+  s.emplace(key_2, std::string{ value_2 });
+  auto cit   = s.cbegin();
   auto b_key = cit->first;
   s.erase(cit);
   EXPECT_EQ(s.find(b_key), s.end());
@@ -195,26 +189,62 @@ TEST(section, erase) {
 }
 
 TEST(section, extract) {
-  ;
-  ;
+  ini::ini::section s(sect_name_1);
+  s.emplace(key_1, std::string{ value_1 });
+  s.emplace(key_2, std::string{ value_2 });
+  //  auto cit = s.cbegin();
+  //  auto k   = cit->first;
+  //  auto v   = cit->second;
+  //  auto result = s.extract(cit);
+  //  EXPECT_STREQ(result.first.c_str(), k.c_str());
+  //  EXPECT_STREQ(result.second.c_str(), v.c_str());
+  s.clear();
+
+  //  s.emplace(key_1, std::string{ value_1 });
+  //  s.emplace(key_2, std::string{ value_2 });
+  //  auto result = s.extract(key_1);
+  //  EXPECT_STREQ(result.first.c_str(), key_1.c_str());
+  //  EXPECT_STREQ(result.second.c_str(), value_1.c_str());
 }
 
-TEST(section, find) {
-  ini::ini::section s(std::string{ "name" });
-  s.emplace(std::string{ "first" }, std::string{ "second" });
-  EXPECT_EQ(s.find("first"), s.begin());
-  EXPECT_EQ(s.find("first_1"), s.end());
+TEST(section, clear_and_empty) {
+  ini::ini::section s(sect_name_1);
+  EXPECT_EQ(s.size(), 0);
+  ASSERT_TRUE(s.empty());
+  s.insert(p_1, p_2);
+  EXPECT_EQ(s.size(), 2);
+  s.clear();
+  EXPECT_EQ(s.size(), 0);
+  ASSERT_TRUE(s.empty());
 }
 
+TEST(section, reserve) {
+  ini::ini::section s(sect_name_1);
+  EXPECT_EQ(s.size(), 0);
+  std::size_t reserve_count = 42;
+  s.reserve(reserve_count);
 
+  //
+  //  Damn, как проверить???
+  //
 
-TEST(section, empty) {
-  ini::ini::section s(std::string{ "name" });
-  EXPECT_EQ(s.empty(), 1);
-  s.emplace(std::string{ "first" }, std::string{ "second" });
-  EXPECT_EQ(s.empty(), 0);
+  //  EXPECT_EQ(s.size(), reserve_count);
 }
 
+TEST(section, equality_and_inequality_operators) {
+  ini::ini::section s_1(sect_name_1, p_1);
+  ini::ini::section s_2(sect_name_1, p_1);
+  ini::ini::section s_3(sect_name_2, p_2);
+  ASSERT_TRUE(s_1 == s_2);
+  ASSERT_FALSE(s_1 == s_3);
+
+  ASSERT_TRUE(s_1 != s_3);
+  ASSERT_FALSE(s_1 != s_2);
+}
+
+//
+//  Нужен ли тест для dump и если да, то как его написать?
+//
 
 
 TEST(ini, parse_from_string) {
@@ -231,6 +261,7 @@ TEST(ini, parse_from_files) {
     ASSERT_GT(ini::parse_from_file(i).size(), 0);
 }
 
+// Напомните, что это за тест?
 TEST(ini, range_based_for) {
   ini::ini ini = ini::parse(raw_test_data);
   for(const auto& [name, sect]: ini) {
@@ -241,6 +272,124 @@ TEST(ini, range_based_for) {
       EXPECT_FALSE(value.empty());
     }
   }
+}
+
+
+
+TEST(ini, constructors) {
+  ini::ini ini_1{};
+
+  ini::ini ini_2(fs::path{ TEST_DATA_DIR });
+  EXPECT_TRUE(ini_2 == ini::parse_from_file(fs::path{ TEST_DATA_DIR }));
+
+  ini::ini ini_3(ini_2);
+  EXPECT_TRUE(ini_3 == ini_2);
+
+  ini::ini ini_4(ini::ini{ ini_3 });
+  EXPECT_TRUE(ini_4 == ini_3);
+
+  ini::ini ini_5 = ini_4;
+  EXPECT_TRUE(ini_5 == ini_4);
+
+  ini::ini ini_6 = ini::ini{ ini_5 };
+  EXPECT_TRUE(ini_6 == ini_5);
+}
+
+TEST(ini, insert) {
+  ini::ini ini{};
+
+  ini.insert(ini::ini::section{ sect_name_1, p_1, p_2 });
+  ASSERT_TRUE(ini[sect_name_1][key_1] == value_1);
+  ASSERT_TRUE(ini[sect_name_1][key_2] == value_2);
+
+  ini.clear();
+
+  ini::ini::section s = ini::ini::section{ sect_name_1, p_1, p_2 };
+  ini.insert(s);
+  ASSERT_TRUE(ini[sect_name_1][key_1] == value_1);
+  ASSERT_TRUE(ini[sect_name_1][key_2] == value_2);
+
+  ini.clear();
+
+  ini.insert(sect_name_1, p_1, p_2);
+  ASSERT_TRUE(ini[sect_name_1][key_1] == value_1);
+  ASSERT_TRUE(ini[sect_name_1][key_2] == value_2);
+}
+
+TEST(ini, insert_or_assign) {
+  ini::ini ini{};
+  ini::ini::section s = ini::ini::section{ sect_name_1, p_1, p_2 };
+  ini.insert_or_assign(ini::ini::section{s});
+  EXPECT_EQ(ini[sect_name_1], s);
+  ASSERT_FALSE(ini.insert_or_assign(ini::ini::section{ sect_name_1 }).second);
+}
+
+TEST(ini, emplace) {
+  ini::ini          ini{};
+  ini::ini::section s_1{ sect_name_1, p_1 };
+  auto              result = ini.emplace(s_1);
+  ASSERT_TRUE(result.second);
+  EXPECT_EQ(result.first->second, s_1);
+
+  //
+  //  Не понимаю как проверить возвращается ли верный итераторю Тоже самое и в следующем тесте на трай
+  //
+
+  s_1.insert(p_2);
+  result = ini.emplace(s_1);
+  ASSERT_FALSE(result.second);
+
+  ini::ini::section s_2{ sect_name_2, p_2 };
+  result = ini.emplace(ini::ini::section{ s_2 });
+  ASSERT_TRUE(result.second);
+
+  s_2.insert(p_1);
+  result = ini.emplace(ini::ini::section{ s_2 });
+  ASSERT_FALSE(result.second);
+}
+
+TEST(ini, try_emplace) {
+  ini::ini          ini{};
+  ini::ini::section s_1{ sect_name_1, p_1 };
+  auto              result = ini.try_emplace(s_1);
+  ASSERT_TRUE(result.second);
+
+  s_1.insert(p_2);
+  result = ini.try_emplace(s_1);
+  ASSERT_FALSE(result.second);
+
+  ini::ini::section s_2{ sect_name_2, p_2 };
+  result = ini.try_emplace(ini::ini::section{ s_2 });
+  ASSERT_TRUE(result.second);
+
+  s_2.insert(p_1);
+  result = ini.try_emplace(ini::ini::section{ s_2 });
+  ASSERT_FALSE(result.second);
+}
+
+TEST(ini, square_brackets_operator) {
+  ini::ini          ini{};
+  ini::ini::section s_1{ sect_name_1, p_1 };
+  ini.emplace(s_1);
+  EXPECT_EQ(ini[sect_name_1], s_1);
+  try {
+    ini[sect_name_2];
+  } catch(const std::out_of_range& e) {
+    ASSERT_TRUE(std::strstr(e.what(), "not found"));
+    ASSERT_TRUE(std::strstr(e.what(), sect_name_2.c_str()));
+  }
+}
+
+TEST(ini, find) {
+  ini::ini          ini{};
+  ini::ini::section s_1{ sect_name_1, p_1 };
+  ini.emplace(s_1);
+  EXPECT_EQ(ini.find(sect_name_1)->second, s_1);
+}
+
+TEST(ini, unsafe_access) {
+  ;
+  ;
 }
 
 TEST(ini, size) {
@@ -287,17 +436,4 @@ TEST(ini, swap) {
   EXPECT_STREQ(ini_2["section"]["domain"].c_str(), "example.com");
 }
 
-TEST(ini, insert) {
-  ini::ini          ini = ini::parse(raw_test_data);
-  ini::ini::section s(std::string{ "Hello" });
-  ini.insert(s);
-  EXPECT_STREQ(ini["Hello"].name.c_str(), "Hello");
-  // ini::ini::section s2(std::string{ "Hello" }, { std::string{ "first" }, std::string{ "second" } });
-  s.name = std::string{ "Hello 2" };
-  s.emplace(std::string{ "first" }, std::string{ "second" });
-  ini.insert(s);
-  EXPECT_STREQ(ini["Hello 2"].name.c_str(), "Hello 2");
-  EXPECT_STREQ(ini["Hello 2"]["first"].c_str(), "second");
-  ini.insert(std::string{ "Hello 3" });
-  EXPECT_STREQ(ini["Hello 3"].name.c_str(), "Hello 3");
-}
+
