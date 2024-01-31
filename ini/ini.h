@@ -96,13 +96,11 @@ namespace ini {
       iterator    erase(iterator it) { return data.erase(it); }
       iterator    erase(const_iterator it) { return data.erase(it); }
 
-      std::pair<std::string&, std::string&> extract(const_iterator position) {
-        auto node = data.extract(position);
-        return { node.key(), node.mapped() };
+      auto extract(const_iterator position) {
+          return data.extract(position);
       }
-      std::pair<std::string&, std::string&> extract(const std::string& key) {
-        auto node = data.extract(key);
-        return { node.key(), node.mapped() };
+      auto extract(const std::string& key) {
+          return data.extract(key);
       }
 
       void clear() {

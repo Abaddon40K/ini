@@ -115,12 +115,15 @@ TEST(section, try_emplace) {
 TEST(section, square_brackets_operator) {
   ini::ini::section s(sect_name_1, p_1);
   EXPECT_STREQ(s[key_1].c_str(), value_1.c_str());
+  bool in_catch = false;
   try {
     s[key_2];
   } catch(const std::out_of_range& e) {
     ASSERT_TRUE(std::strstr(e.what(), "not found in section"));
     ASSERT_TRUE(std::strstr(e.what(), key_2.c_str()));
+    in_catch = true;
   }
+  ASSERT_TRUE(in_catch);
 }
 
 TEST(section, find) {
@@ -192,19 +195,19 @@ TEST(section, extract) {
   ini::ini::section s(sect_name_1);
   s.emplace(key_1, std::string{ value_1 });
   s.emplace(key_2, std::string{ value_2 });
-  //  auto cit = s.cbegin();
-  //  auto k   = cit->first;
-  //  auto v   = cit->second;
-  //  auto result = s.extract(cit);
-  //  EXPECT_STREQ(result.first.c_str(), k.c_str());
-  //  EXPECT_STREQ(result.second.c_str(), v.c_str());
+  auto it = s.find(key_1);
+  std::string key = it->first, value = it->second;
+
+  auto node = s.extract(it);
+  EXPECT_STREQ(node.key().c_str(), key.c_str());
+  EXPECT_STREQ(node.mapped().c_str(), value.c_str());
   s.clear();
 
-  //  s.emplace(key_1, std::string{ value_1 });
-  //  s.emplace(key_2, std::string{ value_2 });
-  //  auto result = s.extract(key_1);
-  //  EXPECT_STREQ(result.first.c_str(), key_1.c_str());
-  //  EXPECT_STREQ(result.second.c_str(), value_1.c_str());
+  s.emplace(key_1, std::string{ value_1 });
+  s.emplace(key_2, std::string{ value_2 });
+  node = s.extract(key_1);
+  EXPECT_STREQ(node.key().c_str(), key.c_str());
+  EXPECT_STREQ(node.mapped().c_str(), value.c_str());
 }
 
 TEST(section, clear_and_empty) {
