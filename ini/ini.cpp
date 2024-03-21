@@ -1,6 +1,7 @@
 #include "ini.h"
 
 #include <iostream>
+#include <algorithm>
 
 namespace ini {
 

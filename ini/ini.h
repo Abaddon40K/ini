@@ -4,6 +4,7 @@
 #include <fstream>
 #include <string>
 #include <unordered_map>
+#include <type_traits>
 
 /*
  *  TODO: Добавить политики для ini
@@ -69,6 +70,7 @@ namespace ini {
       }
 
       std::pair<iterator, bool> emplace(const std::string& key, std::string&& val) { return data.emplace(key, val); }
+
       std::pair<iterator, bool> emplace(std::string&& key, std::string&& val) { return data.emplace(key, val); }
 
       std::pair<iterator, bool> try_emplace(const std::string& key, std::string&& val) {
@@ -96,12 +98,8 @@ namespace ini {
       iterator    erase(iterator it) { return data.erase(it); }
       iterator    erase(const_iterator it) { return data.erase(it); }
 
-      auto extract(const_iterator position) {
-          return data.extract(position);
-      }
-      auto extract(const std::string& key) {
-          return data.extract(key);
-      }
+      auto extract(const_iterator position) { return data.extract(position); }
+      auto extract(const std::string& key) { return data.extract(key); }
 
       void clear() {
         name = {};
