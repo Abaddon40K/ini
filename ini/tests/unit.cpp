@@ -195,7 +195,7 @@ TEST(section, extract) {
   ini::ini::section s(sect_name_1);
   s.emplace(key_1, std::string{ value_1 });
   s.emplace(key_2, std::string{ value_2 });
-  auto it = s.find(key_1);
+  auto        it  = s.find(key_1);
   std::string key = it->first, value = it->second;
 
   auto node = s.extract(it);
@@ -233,16 +233,16 @@ TEST(section, equality_and_inequality_operators) {
 }
 
 TEST(section, dump) {
-    ini::ini::section s(sect_name_1, p_1);
-    std::ostringstream buff;
-    std::string str;
-    str += key_1;
-    str += ini::separator;
-    str += value_1;
-    str += '\n';
+  ini::ini::section  s(sect_name_1, p_1);
+  std::ostringstream buff;
+  std::string        str;
+  str += key_1;
+  str += ini::separator;
+  str += value_1;
+  str += '\n';
 
-    s.dump(buff);
-    EXPECT_STREQ(buff.str().c_str(), str.c_str());
+  s.dump(buff);
+  EXPECT_STREQ(buff.str().c_str(), str.c_str());
 }
 
 
@@ -260,13 +260,13 @@ TEST(ini, parse_from_files) {
     ASSERT_GT(ini::parse_from_file(i).size(), 0);
 }
 
-// Напомните, что это за тест?
+// РќР°РїРѕРјРЅРёС‚Рµ, С‡С‚Рѕ СЌС‚Рѕ Р·Р° С‚РµСЃС‚?
 TEST(ini, range_based_for) {
   ini::ini ini = ini::parse(raw_test_data);
-  for(const auto& [name, sect] : ini) {
+  for(const auto& [name, sect]: ini) {
     EXPECT_FALSE(sect.empty());
     EXPECT_FALSE(sect.name.empty());
-    for(const auto& [key, value] : sect) {
+    for(const auto& [key, value]: sect) {
       EXPECT_FALSE(key.empty());
       EXPECT_FALSE(value.empty());
     }
@@ -274,22 +274,25 @@ TEST(ini, range_based_for) {
 }
 
 TEST(ini, constructors) {
-  ini::ini ini_1{};
+  for(auto& i: fs::directory_iterator{ fs::path{ TEST_DATA_DIR } }) {
+    ini::ini ini_1{};
+    EXPECT_EQ(ini_1.size(), 0);
 
-  ini::ini ini_2(fs::path{ TEST_DATA_DIR });
-  EXPECT_TRUE(ini_2 == ini::parse_from_file(fs::path{ TEST_DATA_DIR }));
+    ini::ini ini_2(i);
+    EXPECT_TRUE(ini_2 == ini::parse_from_file(i));
 
-  ini::ini ini_3(ini_2);
-  EXPECT_TRUE(ini_3 == ini_2);
+    ini::ini ini_3(ini_2);
+    EXPECT_TRUE(ini_3 == ini_2);
 
-  ini::ini ini_4(ini::ini{ ini_3 });
-  EXPECT_TRUE(ini_4 == ini_3);
+    ini::ini ini_4(ini::ini{ ini_3 });
+    EXPECT_TRUE(ini_4 == ini_3);
 
-  ini::ini ini_5 = ini_4;
-  EXPECT_TRUE(ini_5 == ini_4);
+    ini::ini ini_5 = ini_4;
+    EXPECT_TRUE(ini_5 == ini_4);
 
-  ini::ini ini_6 = ini::ini{ ini_5 };
-  EXPECT_TRUE(ini_6 == ini_5);
+    ini::ini ini_6 = ini::ini{ ini_5 };
+    EXPECT_TRUE(ini_6 == ini_5);
+  }
 }
 
 TEST(ini, insert) {
@@ -314,9 +317,9 @@ TEST(ini, insert) {
 }
 
 TEST(ini, insert_or_assign) {
-  ini::ini ini{};
+  ini::ini          ini{};
   ini::ini::section s = ini::ini::section{ sect_name_1, p_1, p_2 };
-  ini.insert_or_assign(ini::ini::section{s});
+  ini.insert_or_assign(ini::ini::section{ s });
   EXPECT_EQ(ini[sect_name_1], s);
   ASSERT_FALSE(ini.insert_or_assign(ini::ini::section{ sect_name_1 }).second);
 }
@@ -329,7 +332,7 @@ TEST(ini, emplace) {
   EXPECT_EQ(result.first->second, s_1);
 
   //
-  //  Не понимаю как проверить возвращается ли верный итераторю Тоже самое и в следующем тесте на трай
+  //  РќРµ РїРѕРЅРёРјР°СЋ РєР°Рє РїСЂРѕРІРµСЂРёС‚СЊ РІРѕР·РІСЂР°С‰Р°РµС‚СЃСЏ Р»Рё РІРµСЂРЅС‹Р№ РёС‚РµСЂР°С‚РѕСЂСЋ РўРѕР¶Рµ СЃР°РјРѕРµ Рё РІ СЃР»РµРґСѓСЋС‰РµРј С‚РµСЃС‚Рµ РЅР° С‚СЂР°Р№
   //
 
   s_1.insert(p_2);
@@ -367,7 +370,7 @@ TEST(ini, try_emplace) {
 TEST(ini, square_brackets_operator) {
   ini::ini          ini{};
   ini::ini::section s_1{ sect_name_1, p_1 };
-  bool in_catch = false;
+  bool              in_catch = false;
 
   ini.emplace(s_1);
   EXPECT_EQ(ini[sect_name_1], s_1);
@@ -437,5 +440,3 @@ TEST(ini, swap) {
   EXPECT_STREQ(ini_1["section"]["domain"].c_str(), "new value");
   EXPECT_STREQ(ini_2["section"]["domain"].c_str(), "example.com");
 }
-
-
